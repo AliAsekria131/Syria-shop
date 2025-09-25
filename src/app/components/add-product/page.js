@@ -64,24 +64,31 @@ export default function AddProduct({ onProductAdded, isOpen, setIsOpen }) {
     setTimeout(() => setErrors([]), 5000); // إخفاء الأخطاء بعد 5 ثواني
   };
 
-  // دالة رفع الصورة
-  const uploadImage = async (file) => {
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const response = await fetch("/api/upload-image", {
-      method: "POST",
-      body: formData,
+// دالة رفع الصورة
+const uploadImage = async (file) => {
+  // إنشاء اسم فريد للملف
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+  
+  // رفع الصورة إلى Supabase Storage
+  const { data, error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
     });
 
-    const result = await response.json();
+  if (error) {
+    throw new Error(error.message || "فشل في رفع الصورة");
+  }
 
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || "فشل في رفع الصورة");
-    }
+  // الحصول على الرابط العام للصورة
+  const { data: { publicUrl } } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(fileName);
 
-    return result.url;
-  };
+  return publicUrl;
+};
 
   // دالة إضافة المنتج
   const handleAddProduct = async () => {

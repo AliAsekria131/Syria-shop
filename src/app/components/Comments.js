@@ -255,7 +255,7 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
                   </button>
                 )}
               </div>
-              <p className="text-sm text-gray-700">{comments[0].text}</p>
+              <p className="text-sm text-gray-700">{comments[0].comment_text}</p>
             </div>
           </div>
           
@@ -287,7 +287,7 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
                     </button>
                   )}
                 </div>
-                <p className="text-sm text-gray-700">{comment.text}</p>
+                <p className="text-sm text-gray-700">{comment.comment_text}</p>
               </div>
             </div>
           ))}
@@ -304,22 +304,22 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
     className="w-8 h-8 rounded-full object-cover bg-gray-100"
     onError={(e) => { e.target.src = "/avatar.svg"; }}
   />
-  <div className="flex flex-1 relative">
+  <div className="flex flex-1 items-center gap-2">
+   {/*  focus:bg-white focus:ring-2 focus:ring-red-500 */}
     <input
-	  
       type="text"
       placeholder="أضف تعليقاً..."
       value={newComment}
       onChange={(e) => setNewComment(e.target.value)}
       onKeyPress={(e) => e.key === 'Enter' && addComment()}
-      className=" flex-1 px-3 py-2 bg-gray-50 rounded-full text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-red-500 border border-gray-300"
+      className=" flex-1 px-3 py-2 bg-gray-50 rounded-full focus:outline-none text-sm  border border-gray-300"
       disabled={loading}
     />
     {/*newComment.trim() */}
       <button
         onClick={addComment}
         disabled={loading}
-        className=" transform -translate-y-1/2 p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+        className=" p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
       >
         <SendIcon size={14} />
       </button>

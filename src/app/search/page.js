@@ -1,9 +1,8 @@
-// main page
 "use client";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEffect, useState, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Home,
   Search,
@@ -21,22 +20,31 @@ import {
   Menu,
 } from "lucide-react";
 import { getCurrentUser } from "../../utils/auth";
-import { useExpiredAdsChecker } from "../../utils/checkExpiredAds";
 import RemainingTime from "../components/RemainingTime";
 
-export default function MainPage() {
+export default function SearchComponent() {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const pathname = usePathname();
 
   // الحالات
   const [user, setUser] = useState(null);
   const [ads, setAds] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [searchLoading, setSearchLoading] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showDesktopFilters, setShowDesktopFilters] = useState(false);
 
-  const [searchInputValue, setSearchInputValue] = useState("");
+  // حالات الفلاتر
+  const [filters, setFilters] = useState({
+    category: searchParams.get("category") || "",
+    location: searchParams.get("location") || "",
+  });
+
+  const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
@@ -53,24 +61,9 @@ export default function MainPage() {
         setShowSettingsMenu(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showUserMenu, showSettingsMenu]);
-
-  // حالات الفلاتر
-  const [filters, setFilters] = useState({
-    category: "",
-    location: "",
-  });
-
-  const [error, setError] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [locations, setLocations] = useState([]);
-
-  useEffect(() => {
-    useExpiredAdsChecker();
-  }, []);
 
   // إضافة مستمع للنقر خارج القائمة المنسدلة
   useEffect(() => {
@@ -110,13 +103,19 @@ export default function MainPage() {
     async (showLoading = true) => {
       try {
         if (showLoading) setLoading(true);
-        setError("");
 
         let query = supabase
           .from("ads")
           .select("*")
-          .in("status", ["active", "expired"])
+          .eq("status", "active")
           .order("created_at", { ascending: false });
+
+        // فلتر البحث النصي
+        if (searchQuery.trim()) {
+          query = query.or(
+            `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`
+          );
+        }
 
         // تطبيق الفلاتر
         if (filters.category) {
@@ -133,26 +132,16 @@ export default function MainPage() {
           throw new Error(fetchError.message);
         }
 
-        if (data && data.length > 0) {
-          const filteredData = data.filter((ad) => {
-            return (
-              ad.status === "active" ||
-              (ad.status === "expired" && ad.user_id === user?.id)
-            );
-          });
-
-          setAds(filteredData || []);
-        } else {
-          setAds([]);
-        }
+        setAds(data || []);
       } catch (err) {
         console.error("Error fetching ads:", err);
-        setError("حدث خطأ في تحميل المنتجات");
+        setAds([]);
       } finally {
         setLoading(false);
+        setSearchLoading(false);
       }
     },
-    [supabase, filters, user?.id]
+    [supabase, searchQuery, filters]
   );
 
   // جلب الفئات والمواقع المتاحة
@@ -188,17 +177,54 @@ export default function MainPage() {
 
   useEffect(() => {
     if (user) {
-      fetchAds(true);
       fetchFilters();
     }
   }, [user, fetchFilters]);
 
+  // البحث التلقائي مع تأخير
+  useEffect(() => {
+    if (!user) return;
+
+    if (searchQuery.length > 0 && searchQuery.length < 2) return;
+
+    const timeoutId = setTimeout(() => {
+      setSearchLoading(true);
+      fetchAds(false);
+    }, 800);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, user, fetchAds]);
+
   // مراقبة تغيير الفلاتر
   useEffect(() => {
-    if (user) {
+    if (user && (filters.category || filters.location)) {
       fetchAds(false);
     }
   }, [filters, user, fetchAds]);
+
+  // تحديث URL مع معاملات البحث
+  const updateURL = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (filters.category) params.set("category", filters.category);
+    if (filters.location) params.set("location", filters.location);
+
+    const newURL = params.toString()
+      ? `/search?${params.toString()}`
+      : "/search";
+    window.history.replaceState(null, "", newURL);
+  };
+
+  useEffect(() => {
+    updateURL();
+  }, [searchQuery, filters]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      fetchAds(true);
+    }
+  };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("ar-SY").format(price);
@@ -219,6 +245,7 @@ export default function MainPage() {
   };
 
   const clearFilters = () => {
+    setSearchQuery("");
     setFilters({
       category: "",
       location: "",
@@ -226,7 +253,7 @@ export default function MainPage() {
   };
 
   const hasActiveFilters = () => {
-    return filters.category || filters.location;
+    return searchQuery || filters.category || filters.location;
   };
 
   if (!user) {
@@ -257,11 +284,7 @@ export default function MainPage() {
           <div className="flex flex-col gap-4 mb-auto">
             <button
               onClick={() => router.push("/main")}
-              className={`p-3 rounded-xl transition-colors ${
-                pathname === "/main"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
               title="الصفحة الرئيسية"
             >
               <Home className="w-6 h-6" />
@@ -269,7 +292,11 @@ export default function MainPage() {
 
             <button
               onClick={() => router.push("/search")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              className={`p-3 rounded-xl transition-colors ${
+                pathname === "/search"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
               title="البحث"
             >
               <Search className="w-6 h-6" />
@@ -318,7 +345,6 @@ export default function MainPage() {
               </div>
             )}
           </div>
-          
         </div>
       </div>
 
@@ -341,27 +367,21 @@ export default function MainPage() {
               </button>
 
               {/* Search Input */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (searchInputValue.trim()) {
-                    router.push(
-                      `/search?q=${encodeURIComponent(searchInputValue)}`
-                    );
-                  } else {
-                    router.push("/search");
-                  }
-                }}
-                className="flex-1 relative"
-              >
+              <form onSubmit={handleSearch} className="flex-1 relative">
                 <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="ابحث في المنتجات..."
-                  value={searchInputValue}
-                  onChange={(e) => setSearchInputValue(e.target.value)}
-                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-full border-2 border-gray-200 hover:border-red-300 focus:border-red-500 focus:outline-none"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pr-12 pl-12 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-full border-2 border-gray-200 hover:border-red-300 focus:border-red-500 focus:outline-none"
+                  autoFocus
                 />
+                {searchLoading && (
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                    <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </form>
 
               {/* User Menu */}
@@ -463,84 +483,211 @@ export default function MainPage() {
           )}
         </div>
 
-        {/* Products Grid */}
+        {/* Mobile Header */}
+        <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200">
+          <div className="px-4 py-4">
+            <h1 className="text-xl font-bold text-gray-900 mb-4">البحث</h1>
+
+            {/* Mobile Search Form */}
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="relative">
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="ابحث في المنتجات..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pr-12 pl-12 py-4 rounded-full border-2 border-gray-200 focus:border-red-500 focus:outline-none text-lg"
+                  autoFocus
+                />
+                {searchLoading && (
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                    <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+            </form>
+
+            {/* Mobile Filter Toggle */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
+                  showDesktopFilters
+                    ? "bg-red-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span>الفلاتر</span>
+              </button>
+
+              {hasActiveFilters() && (
+                <button
+                  onClick={clearFilters}
+                  className="text-red-500 hover:text-red-600 font-medium"
+                >
+                  مسح الكل
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Filters Panel */}
+            {showDesktopFilters && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      الفئة
+                    </label>
+                    <select
+                      value={filters.category}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          category: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
+                    >
+                      <option value="">جميع الفئات</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      الموقع
+                    </label>
+                    <select
+                      value={filters.location}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          location: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
+                    >
+                      <option value="">جميع المواقع</option>
+                      {locations.map((location) => (
+                        <option key={location} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Results */}
         <div className="p-4 md:p-6">
           {loading ? (
             <div className="text-center py-20">
               <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">جاري تحميل المنتجات...</p>
-            </div>
-          ) : ads.length === 0 ? (
-            <div className="text-center py-20">
-              <Search className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {hasActiveFilters()
-                  ? "لا توجد نتائج مطابقة"
-                  : "لا توجد منتجات متاحة"}
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {hasActiveFilters()
-                  ? "جرب تعديل معايير البحث أو مسح الفلاتر"
-                  : "كن أول من يضيف منتجاً في هذا القسم"}
-              </p>
+              <p className="text-gray-600">جاري البحث...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 auto-rows-max">
-              {ads.map((product) => (
-                <div
-                  key={product.id}
-                  className="p-2 bg-white rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 hover:shadow-md"
-                  onClick={() => router.push(`/product/${product.id}`)}
-                >
-                  <div className="relative">
-                    <div
-                      className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-2"
-                      style={{ aspectRatio: "1/1" }}
-                    >
-                      <img
-                        src={
-                          product.image_urls?.[0] || "/placeholder-image.jpg"
-                        }
-                        alt={product.title}
-                        className="max-w-full max-h-full object-contain"
-                        onError={handleImageError}
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
-                      {product.category}
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {product.title}
-                    </h3>
-
-                    <div className="mb-3">
-                      <RemainingTime expiresAt={product.expires_at} />
-                    </div>
-
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-lg font-bold text-green-600">
-                        {formatPrice(product.price)} {product.currency}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        <span>{product.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(product.created_at)}</span>
-                      </div>
-                    </div>
-                  </div>
+            <>
+              {/* Results Count */}
+              {searchQuery && (
+                <div className="mb-4">
+                  <p className="text-gray-600">
+                    {ads.length > 0
+                      ? `تم العثور على ${ads.length} نتيجة للبحث عن "${searchQuery}"`
+                      : `لا توجد نتائج للبحث عن "${searchQuery}"`}
+                  </p>
                 </div>
-              ))}
-            </div>
+              )}
+
+              {ads.length === 0 &&
+              (searchQuery || filters.category || filters.location) ? (
+                <div className="text-center py-20">
+                  <Search className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    لا توجد نتائج مطابقة
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    جرب تعديل معايير البحث أو مسح الفلاتر
+                  </p>
+                </div>
+              ) : ads.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                  {ads.map((product) => (
+                    <div
+                      key={product.id}
+                      className="p-2 bg-white rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 hover:shadow-md"
+                      onClick={() => router.push(`/product/${product.id}`)}
+                    >
+                      <div className="relative">
+                        <div
+                          className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-2"
+                          style={{ aspectRatio: "1/1" }}
+                        >
+                          <img
+                            src={
+                              product.image_urls?.[0] ||
+                              "/placeholder-image.jpg"
+                            }
+                            alt={product.title}
+                            className="max-w-full max-h-full object-contain"
+                            onError={handleImageError}
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                          {product.category}
+                        </div>
+                      </div>
+
+                      <div className="p-4">
+                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                          {product.title}
+                        </h3>
+
+                        <div className="mb-3">
+                          <RemainingTime expiresAt={product.expires_at} />
+                        </div>
+
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-lg font-bold text-green-600">
+                            {formatPrice(product.price)} {product.currency}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>{product.location}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>{formatDate(product.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <Search className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    ابحث عن المنتجات
+                  </h3>
+                  <p className="text-gray-500">
+                    أدخل كلمة البحث أو استخدم الفلاتر للعثور على ما تبحث عنه
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -553,16 +700,16 @@ export default function MainPage() {
         <div className="flex items-center justify-around h-full">
           <button
             onClick={() => router.push("/main")}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              pathname === "/main" ? "text-red-500" : "text-gray-600"
-            }`}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
             <Home className="w-5 h-5" />
           </button>
 
           <button
             onClick={() => router.push("/search")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              pathname === "/search" ? "text-red-500" : "text-gray-600"
+            }`}
           >
             <Search className="w-5 h-5" />
           </button>

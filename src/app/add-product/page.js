@@ -1,8 +1,9 @@
+// add-product
 "use client";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   Plus,
@@ -17,10 +18,12 @@ import {
   ChevronDown,
   LogOut,
   PlusCircle,
+  Filter,
 } from "lucide-react";
 
 export default function AddProductPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClientComponentClient();
 
   // حالة المستخدم
@@ -59,6 +62,25 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
 
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+
+  // 2. أضف مستمع النقر خارج قائمة الإعدادات (مع المستمعين الموجودين)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserMenu && !event.target.closest(".user-menu-container")) {
+        setShowUserMenu(false);
+      }
+      if (
+        showSettingsMenu &&
+        !event.target.closest(".settings-menu-container")
+      ) {
+        setShowSettingsMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showUserMenu, showSettingsMenu]);
+
   // التحقق من المصادقة
   useEffect(() => {
     const checkAuth = async () => {
@@ -67,7 +89,14 @@ export default function AddProductPage() {
         router.push("/");
         return;
       }
-      setUser(user);
+
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      setUser(userProfile || user);
     };
     checkAuth();
   }, [supabase, router]);
@@ -121,11 +150,32 @@ export default function AddProductPage() {
     setTimeout(() => setErrors([]), 5000);
   };
 
-  // دالة رفع الصورة
-  const uploadImage = async (file) => {
-    console.log("محاكاة رفع الصورة:", file.name);
-    return "/placeholder-image.jpg";
-  };
+const uploadImage = async (file) => {
+  // إنشاء اسم فريد للملف
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+  
+  // رفع الصورة إلى Supabase Storage
+  const { data, error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (error) {
+    console.error("Supabase upload error:", error);
+    throw new Error(error.message || "فشل في رفع الصورة");
+  }
+
+  // الحصول على الرابط العام للصورة
+  const { data: { publicUrl } } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(fileName);
+
+  console.log("Upload successful, URL:", publicUrl);
+  return publicUrl;
+};
 
   // دالة إضافة المنتج
   const handleAddProduct = async () => {
@@ -216,6 +266,7 @@ export default function AddProductPage() {
       {/* Desktop Sidebar */}
       <div className="hidden md:block fixed right-0 top-0 h-full w-20 bg-white border-l border-gray-200 z-50">
         <div className="flex flex-col items-center py-6 h-full">
+          {/* Logo */}
           <button
             onClick={() => router.push("/main")}
             className="mb-8 p-3 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors"
@@ -223,18 +274,35 @@ export default function AddProductPage() {
             <Home className="w-6 h-6" />
           </button>
 
+          {/* Navigation Icons */}
           <div className="flex flex-col gap-4 mb-auto">
             <button
               onClick={() => router.push("/main")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              className={`p-3 rounded-xl transition-colors ${
+                pathname === "/main"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
               title="الصفحة الرئيسية"
             >
               <Home className="w-6 h-6" />
             </button>
 
             <button
+              onClick={() => router.push("/search")}
+              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              title="البحث"
+            >
+              <Search className="w-6 h-6" />
+            </button>
+
+            <button
               onClick={() => router.push("/add-product")}
-              className="p-3 bg-gray-900 text-white rounded-xl transition-colors"
+              className={`p-3 rounded-xl transition-colors ${
+                pathname === "/add-product"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
               title="إضافة منتج"
             >
               <Plus className="w-6 h-6" />
@@ -249,24 +317,64 @@ export default function AddProductPage() {
             </button>
           </div>
 
-          <button
-            onClick={() => router.push("/settings")}
-            className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-            title="الإعدادات"
-          >
-            <Settings className="w-6 h-6" />
-          </button>
+          {/* Settings at bottom */}
+          <div className="relative settings-menu-container">
+            <button
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              title="الإعدادات"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
+
+            {/* قائمة الإعدادات المنبثقة */}
+            {showSettingsMenu && (
+              <div className="absolute ml-2 bottom-13 w-100 bg-white rounded-xl shadow-lg border py-2 z-50">
+                <button
+                  onClick={() => {
+                    router.push("/settings");
+                    setShowSettingsMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
+                >
+                  <Settings className="w-5 h-5 text-gray-500" />
+                  <span>الإعدادات</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="md:mr-20">
-        {/* Desktop Header */}
+        {/* Top Bar - Desktop */}
         <div className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
           <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">إنشاء منشور</h1>
-              
+            <div className="flex items-center gap-4">
+              {/* Search Bar */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const searchValue = e.target.search.value.trim();
+                  if (searchValue) {
+                    router.push(`/search?q=${encodeURIComponent(searchValue)}`);
+                  } else {
+                    router.push('/search');
+                  }
+                }}
+                className="flex-1 relative"
+              >
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  name="search"
+                  placeholder="ابحث في المنتجات..."
+                  className="w-full pr-12 pl-12 py-4 rounded-full border-2 border-gray-200 focus:border-red-500 focus:outline-none text-lg"
+                />
+              </form>
+
+              {/* User Menu */}
               <div className="relative user-menu-container">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -329,6 +437,9 @@ export default function AddProductPage() {
 
         {/* Form Content */}
         <div className="max-w-4xl mx-auto p-4 md:p-6">
+          {/* Page Title */}
+          <h1 className="text-2xl font-bold text-gray-900 mb-8">إنشاء منشور</h1>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Side - Image Upload */}
             <div className="space-y-4">
@@ -506,42 +617,43 @@ export default function AddProductPage() {
         <div className="flex items-center justify-around h-16">
           <button
             onClick={() => router.push("/main")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              pathname === "/main" ? "text-red-500" : "text-gray-600"
+            }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-xs">الرئيسية</span>
           </button>
 
           <button
-            onClick={() => router.push("/main")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            onClick={() => router.push("/search")}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
             <Search className="w-5 h-5" />
-            <span className="text-xs">البحث</span>
           </button>
 
           <button
             onClick={() => router.push("/add-product")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-red-500"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              pathname === "/add-product" ? "text-red-500" : "text-gray-600"
+            }`}
           >
             <PlusCircle className="w-5 h-5" />
-            <span className="text-xs">إضافة</span>
           </button>
 
           <button
             onClick={() => router.push("/messages")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
             <MessageCircle className="w-5 h-5" />
-            <span className="text-xs">الرسائل</span>
           </button>
 
           <button
             onClick={() => router.push("/dashboard")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              pathname === "/dashboard" ? "text-red-500" : "text-gray-600"
+            }`}
           >
             <User className="w-5 h-5" />
-            <span className="text-xs">الملف الشخصي</span>
           </button>
         </div>
       </div>

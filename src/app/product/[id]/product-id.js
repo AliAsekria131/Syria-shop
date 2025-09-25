@@ -593,307 +593,301 @@ return (
         )}
 
         {!loading && !error && product && seller && (
-  <>
-    {/* Desktop Layout main img */}
-    <div className="hidden md:block">
-      <div className="flex gap-6">
-        {/* Left Side - Main Product Card */}
-        <div className="w-1/2">
-          <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 sticky top-24">
-            
-            {/* Image Container - التحديث الجديد */}
-            <div className="relative group p-4">
-              {/* حاوية الصورة مع نسبة ثابتة */}
-              <div className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-4" style={{ aspectRatio: "4/3" }}>
-                <img
-                  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-                  alt={product.title}
-                  className="max-w-full max-h-full object-contain"
-                  onError={handleImageError}
-                  loading="lazy"
-                />
-              </div>
-              
-              {/* Static Action Buttons - Always Visible */}
-              <div className="absolute top-6 right-6 flex flex-col gap-2">
-                <button 
-                  onClick={() => document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(4px)' }}
-                >
-                  <MessageCircle className="w-5 h-5 text-gray-700" />
-                </button>
-                <button 
-                  className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(4px)' }}
-                >
-                  <Share className="w-5 h-5 text-gray-700" />
-                </button>
-                <button 
-                  className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(4px)' }}
-                >
-                  <Heart className="w-5 h-5 text-gray-700" />
-                </button>
-              </div>
+          <>
+            {/* Desktop Layout */}
+            <div className="hidden md:block">
+              <div className="flex gap-6">
+                {/* Left Side - Main Product Card */}
+                <div className="w-1/2">
+                  <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 sticky top-24">
+                    {/* Image Container */}
+<div className="relative group p-4">
+<img
+  src={isValidImageUrl(product.image_urls?.[0]) 
+    ? product.image_urls[0] 
+    : "/placeholder-image.jpg"}
+  alt={product.title}
+  className="w-full h-80 object-cover rounded-2xl bg-gray-100" 
+  onError={handleImageError}
+  loading="lazy"
+/>
+                      
+                      {/* Overlay Buttons - Desktop */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300">
+                        {/* Overlay Buttons - مع تحديث التصميم */}
+<div className="absolute top-6 right-6 flex flex-col gap-2"> {/* تغيير إلى flex-col */}
+  <button 
+    onClick={() => document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' })}
+    className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all"
+  >
+    <MessageCircle className="w-5 h-5 text-gray-700" />
+  </button>
+  <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all">
+    <Share className="w-5 h-5 text-gray-700" />
+  </button>
+  <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all">
+    <Heart className="w-5 h-5 text-gray-700" />
+  </button>
+</div>
 
-              {/* Navigation Arrows */}
-              {product.image_urls?.length > 1 && (
-                <>
-                  <button className="absolute left-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
-                    <ArrowLeft className="w-5 h-5 text-gray-700" />
-                  </button>
-                  <button className="absolute right-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
-                    <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
-                  </button>
-                </>
-              )}
-            </div>
+                        {/* Navigation Arrows */}
+                        {product.image_urls?.length > 1 && (
+                          <>
+                            <button className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <ArrowLeft className="w-5 h-5 text-gray-700" />
+                            </button>
+                            <button className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+					
+                    {/* Product Info */}
+                    <div className="p-6">
+                      {/* Title */}
+                      <h1 className="text-xl font-bold text-gray-900 mb-4">
+                        {product.title}
+                      </h1>
+                      
+                      {/* Horizontal Info Layout */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-2xl font-bold text-green-600">
+                          {formatPrice(product.price)} {product.currency}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <MapPin className="w-4 h-4" />
+                          <span>{product.location}</span>
+                        </div>
+                      </div>
 
-            {/* Product Info */}
-            <div className="p-6">
-              {/* باقي المحتوى كما هو */}
-              <h1 className="text-xl font-bold text-gray-900 mb-4">
-                {product.title}
-              </h1>
-              
-              {/* Horizontal Info Layout */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {formatPrice(product.price)} {product.currency}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <MapPin className="w-4 h-4" />
-                  <span>{product.location}</span>
-                </div>
-              </div>
+                      {/* Description */}
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                        {product.description}
+                      </p>
+					  
+					  {/* Seller Info */}
+                      <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                        <img
+                          src={seller?.avatar_url || "/avatar.svg"}
+                          alt="البائع"
+                          className="w-8 h-8 rounded-full object-cover bg-gray-100"
+                          onError={(e) => { e.target.src = "/avatar.svg"; }}
+                        />
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">
+                            {seller?.full_name || "البائع"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {formatDate(product.created_at)}
+                          </div>
+                        </div>
+                      </div>
+					  
+					  {/* Additional Info */}
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(product.created_at)}
+                        </span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                          {product.category}
+                        </span>
+                      </div>
 
-              {/* Description */}
-              <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                {product.description}
-              </p>
-              
-              {/* Seller Info */}
-              <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                <img
-                  src={seller?.avatar_url || "/avatar.svg"}
-                  alt="البائع"
-                  className="w-8 h-8 rounded-full object-cover bg-gray-100"
-                  onError={(e) => { e.target.src = "/avatar.svg"; }}
-                />
-                <div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {seller?.full_name || "البائع"}
+                      {/* Comments Section */}
+<div id="comments-section">
+  <Comments 
+    productId={productId}
+    currentUser={currentUser}
+    supabase={supabase}
+    isOwner={isOwner}
+  />
+</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {formatDate(product.created_at)}
-                  </div>
                 </div>
-              </div>
-              
-              {/* Additional Info */}
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {formatDate(product.created_at)}
-                </span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                  {product.category}
-                </span>
-              </div>
 
-              {/* Comments Section */}
-              <div id="comments-section">
-                <Comments 
-                  productId={productId}
-                  currentUser={currentUser}
-                  supabase={supabase}
-                  isOwner={isOwner}
-                />
-              </div>
-            </div>
-          </div>
+{/* Right Side - Similar Products */}
+<div className="w-1/2">
+  <div className="grid grid-cols-2 gap-4">
+    {relatedProducts.slice(0, 6).map((relatedProduct) => (
+      <div key={relatedProduct.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer force-image-display"
+           onClick={() => router.push(`/product/${relatedProduct.id}`)}>
+        <div className="relative group">
+          <img
+            src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
+            alt={relatedProduct.title}
+            className="w-full h-48 object-cover bg-gray-100"
+            onError={handleImageError}
+            onLoad={(e) => console.log('Image loaded:', e.target.src)}
+            style={{ display: 'block', minHeight: '192px' }}
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
         </div>
-
-        {/* Right Side - Similar Products */}
-        <div className="w-1/2">
-          <div className="grid grid-cols-2 gap-4">
-            {relatedProducts.slice(0, 6).map((relatedProduct) => (
-              <div key={relatedProduct.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
-                   onClick={() => router.push(`/product/${relatedProduct.id}`)}>
-                <div className="relative w-full bg-gray-100 flex items-center justify-center p-2" style={{ aspectRatio: "1/1" }}>
-                  <img
-                    src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
-                    alt={relatedProduct.title}
-                    className="max-w-full max-h-full object-contain"
-                    onError={handleImageError}
-                  />
-                </div>
-                <div className="p-3">
-                  <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
-                    {relatedProduct.title}
-                  </h3>
-                  <div className="text-sm font-bold text-green-600">
-                    {formatPrice(relatedProduct.price)} {relatedProduct.currency}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom Cards - Masonry Layout */}
-          <div className="grid grid-cols-2 gap-4">
-            {relatedProducts.slice(2).map((relatedProduct) => (
-              <div key={relatedProduct.id} className="break-inside-avoid bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
-                   onClick={() => router.push(`/product/${relatedProduct.id}`)}>
-                <div className="relative group">
-                  <img
-                    src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
-                    alt={relatedProduct.title}
-                    className="w-full h-48 object-cover bg-gray-100"
-                    onError={handleImageError}
-                  />
-                </div>
-                <div className="p-3">
-                  <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
-                    {relatedProduct.title}
-                  </h3>
-                  <div className="text-sm font-bold text-green-600">
-                    {formatPrice(relatedProduct.price)} {relatedProduct.currency}
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="p-3">
+          <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
+            {relatedProduct.title}
+          </h3>
+          <div className="text-sm font-bold text-green-600">
+            {formatPrice(relatedProduct.price)} {relatedProduct.currency}
           </div>
         </div>
       </div>
-    </div>
+    ))}
+  </div>
 
-    {/* Mobile Layout */}
-    <div className="md:hidden">
-      {/* Main Product Card */}
-      <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 mb-6">
-        {/* Image - تحديث للموبايل أيضاً */}
-        <div className="relative p-3">
-          <div className="relative w-full h-60 bg-gray-100 rounded-2xl flex items-center justify-center p-4" >
-            <img
-              src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-              alt={product.title}
-              className="max-w-full max-h-full object-contain"
-              onError={handleImageError}
-            />
-          </div>
-          
-          {/* Navigation Button */}
-          {product.image_urls?.length > 1 && (
-            <button className="absolute top-6 left-6 w-10 h-10 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-md">
-              <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
-            </button>
-          )}
-        </div>
-
-        {/* Mobile Action Buttons */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <button className="bg-red-500 text-white px-6 py-2 rounded-full font-medium">
-              حفظ
-            </button>
-            <div className="flex gap-3">
-              <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
-                <Share className="w-5 h-5 text-gray-600" />
-              </button>
-              <button 
-                onClick={() => setShowMobileComments(true)}
-                className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300"
-              >
-                <MessageCircle className="w-5 h-5 text-gray-600" />
-                <span className="text-sm">التعليقات</span>
-              </button>
-              
-              <button className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300">
-                <Heart className="w-5 h-5 text-gray-600" />
-                <span className="text-sm">79</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Product Info */}
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <img
-              src={seller?.avatar_url || "/avatar.svg"}
-              alt="البائع"
-              className="w-8 h-8 rounded-full object-cover bg-gray-100"
-            />
-            <div>
-              <div className="text-sm font-semibold text-gray-900">
-                {seller?.full_name || "البائع"}
+                  {/* Bottom Cards - Masonry Layout */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {relatedProducts.slice(2).map((relatedProduct) => (
+                      <div key={relatedProduct.id} className="break-inside-avoid bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
+                           onClick={() => router.push(`/product/${relatedProduct.id}`)}>
+                        <div className="relative group">
+                        <img
+  src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
+  alt={relatedProduct.title}
+  className="w-full h-48 object-cover bg-gray-100"
+  onError={handleImageError}
+/>
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
+                        </div>
+                        <div className="p-3">
+                          <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
+                            {relatedProduct.title}
+                          </h3>
+                          <div className="text-sm font-bold text-green-600">
+                            {formatPrice(relatedProduct.price)} {relatedProduct.currency}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <h1 className="text-xl font-bold text-gray-900 mb-3">
-            {product.title}
-          </h1>
+            {/* Mobile Layout */}
+            <div className="md:hidden">
+              {/* Main Product Card */}
+              <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-6">
+                {/* Image */}
+<div className="relative p-3"> {/* إضافة padding */}
+  <img
+    src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+    alt={product.title}
+    className="w-full object-cover rounded-2xl" 
+    style={{ aspectRatio: "4/5" }}
+    onError={handleImageError}
+  />
+                  
+                  {/* Navigation Button */}
+                  {product.image_urls?.length > 1 && (
+                    <button className="absolute top-4 left-4 w-10 h-10 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-md">
+                      <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
+                    </button>
+                  )}
+                </div>
 
-          <div className="text-2xl font-bold text-green-600 mb-3">
-            {formatPrice(product.price)} {product.currency}
-          </div>
+                {/* Mobile Action Buttons */}
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <button className="bg-red-500 text-white px-6 py-2 rounded-full font-medium">
+                      حفظ
+                    </button>
+                    <div className="flex gap-3">
+                      <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
+                        <Share className="w-5 h-5 text-gray-600" />
+                      </button>
+                      <button 
+                        onClick={() => setShowMobileComments(true)}
+                        className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300"
+                      >
+                        <MessageCircle className="w-5 h-5 text-gray-600" />
+                        <span className="text-sm">التعليقات</span>
+                      </button>
+					  
+                      <button className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300">
+                        <Heart className="w-5 h-5 text-gray-600" />
+                        <span className="text-sm">79</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-          <p className="text-gray-600 text-sm leading-relaxed mb-4">
-            {product.description}
-          </p>
+                {/* Product Info */}
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <img
+                      src={seller?.avatar_url || "/avatar.svg"}
+                      alt="البائع"
+                      className="w-8 h-8 rounded-full object-cover bg-gray-100"
+                    />
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {seller?.full_name || "البائع"}
+                      </div>
+                    </div>
+                  </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <MapPin className="w-4 h-4" />
-            <span>{product.location}</span>
-          </div>
-        </div>
-      </div>
+                  <h1 className="text-xl font-bold text-gray-900 mb-3">
+                    {product.title}
+                  </h1>
 
-      {/* Related Products Grid */}
-      <div className="grid grid-cols-2 gap-2">
-        {relatedProducts.slice(0, 4).map((relatedProduct) => (
-          <div key={relatedProduct.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"
-               onClick={() => router.push(`/product/${relatedProduct.id}`)}>
-            <div className="relative w-full bg-gray-100 flex items-center justify-center p-2" style={{ aspectRatio: "1/1" }}>
-              <img
-                src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
-                alt={relatedProduct.title}
-                className="max-w-full max-h-full object-contain"
-                onError={handleImageError}
-                loading="lazy"
+                  <div className="text-2xl font-bold text-green-600 mb-3">
+                    {formatPrice(product.price)} {product.currency}
+                  </div>
+
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    {product.description}
+                  </p>
+
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <MapPin className="w-4 h-4" />
+                    <span>{product.location}</span>
+                  </div>
+                </div>
+              </div>
+
+			{/* Related Products Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {relatedProducts.slice(0, 4).map((relatedProduct) => (
+                  <div key={relatedProduct.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"
+                       onClick={() => router.push(`/product/${relatedProduct.id}`)}>
+                    <img
+  src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
+  alt={relatedProduct.title}
+  className="w-full h-48 object-cover bg-gray-100"
+  onError={handleImageError}
+  loading="lazy"
+/>
+                    <div className="p-3">
+                      <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
+                        {relatedProduct.title}
+                      </h3>
+                      <div className="text-sm font-bold text-green-600">
+                        {formatPrice(relatedProduct.price)} {relatedProduct.currency}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile Comments Modal */}
+            {showMobileComments && (
+              <Comments 
+                productId={productId}
+                currentUser={currentUser}
+                supabase={supabase}
+                isOwner={isOwner}
+                showMobile={true}
+                onClose={() => setShowMobileComments(false)}
               />
-            </div>
-            <div className="p-3">
-              <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
-                {relatedProduct.title}
-              </h3>
-              <div className="text-sm font-bold text-green-600">
-                {formatPrice(relatedProduct.price)} {relatedProduct.currency}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* Mobile Comments Modal */}
-    {showMobileComments && (
-      <Comments 
-        productId={productId}
-        currentUser={currentUser}
-        supabase={supabase}
-        isOwner={isOwner}
-        showMobile={true}
-        onClose={() => setShowMobileComments(false)}
-      />
-    )}
-  </>
-)}
+            )}
+          </>
+        )}
       </div>
     </div>
 

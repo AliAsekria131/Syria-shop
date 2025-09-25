@@ -1,46 +1,40 @@
-// main page
+// settings page
 "use client";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Home,
-  Search,
   Plus,
-  Filter,
-  X,
-  MapPin,
-  Calendar,
-  User,
-  Settings,
-  ChevronDown,
-  PlusCircle,
-  LogOut,
   MessageCircle,
-  Menu,
+  Settings,
+  User,
+  ChevronDown,
+  LogOut,
+  Edit3,
+  ArrowRight,
+  Search,
+  Filter,
 } from "lucide-react";
 import { getCurrentUser } from "../../utils/auth";
-import { useExpiredAdsChecker } from "../../utils/checkExpiredAds";
-import RemainingTime from "../components/RemainingTime";
+import ProfileEditForm from "../components/ProfileEditForm";
 
-export default function MainPage() {
+export default function SettingsPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
-  const pathname = usePathname();
 
   // الحالات
   const [user, setUser] = useState(null);
-  const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showDesktopFilters, setShowDesktopFilters] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
 
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false);
   const [searchInputValue, setSearchInputValue] = useState("");
 
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-
-  // 2. أضف مستمع النقر خارج قائمة الإعدادات (مع المستمعين الموجودين)
+  // مستمع النقر خارج القوائم المنسدلة
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showUserMenu && !event.target.closest(".user-menu-container")) {
@@ -58,33 +52,7 @@ export default function MainPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showUserMenu, showSettingsMenu]);
 
-  // حالات الفلاتر
-  const [filters, setFilters] = useState({
-    category: "",
-    location: "",
-  });
-
-  const [error, setError] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [locations, setLocations] = useState([]);
-
-  useEffect(() => {
-    useExpiredAdsChecker();
-  }, []);
-
-  // إضافة مستمع للنقر خارج القائمة المنسدلة
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserMenu && !event.target.closest(".user-menu-container")) {
-        setShowUserMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showUserMenu]);
-
-  // التحقق من المصادقة
+  // التحقق من المصادقة وجلب بيانات المستخدم
   useEffect(() => {
     const checkAuth = async () => {
       const currentUser = await getCurrentUser(supabase);
@@ -100,141 +68,23 @@ export default function MainPage() {
         .single();
 
       setUser(userProfile || currentUser);
+      setLoading(false);
     };
 
     checkAuth();
   }, [supabase, router]);
 
-  // دالة جلب البيانات مع الفلاتر
-  const fetchAds = useCallback(
-    async (showLoading = true) => {
-      try {
-        if (showLoading) setLoading(true);
-        setError("");
-
-        let query = supabase
-          .from("ads")
-          .select("*")
-          .in("status", ["active", "expired"])
-          .order("created_at", { ascending: false });
-
-        // تطبيق الفلاتر
-        if (filters.category) {
-          query = query.eq("category", filters.category);
-        }
-
-        if (filters.location) {
-          query = query.eq("location", filters.location);
-        }
-
-        const { data, error: fetchError } = await query;
-
-        if (fetchError) {
-          throw new Error(fetchError.message);
-        }
-
-        if (data && data.length > 0) {
-          const filteredData = data.filter((ad) => {
-            return (
-              ad.status === "active" ||
-              (ad.status === "expired" && ad.user_id === user?.id)
-            );
-          });
-
-          setAds(filteredData || []);
-        } else {
-          setAds([]);
-        }
-      } catch (err) {
-        console.error("Error fetching ads:", err);
-        setError("حدث خطأ في تحميل المنتجات");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [supabase, filters, user?.id]
-  );
-
-  // جلب الفئات والمواقع المتاحة
-  const fetchFilters = useCallback(async () => {
-    try {
-      const { data: categoryData } = await supabase
-        .from("ads")
-        .select("category")
-        .eq("status", "active");
-
-      const uniqueCategories = [
-        ...new Set(
-          categoryData?.map((item) => item.category).filter(Boolean) || []
-        ),
-      ];
-      setCategories(uniqueCategories);
-
-      const { data: locationData } = await supabase
-        .from("ads")
-        .select("location")
-        .eq("status", "active");
-
-      const uniqueLocations = [
-        ...new Set(
-          locationData?.map((item) => item.location).filter(Boolean) || []
-        ),
-      ];
-      setLocations(uniqueLocations);
-    } catch (error) {
-      console.error("Error fetching filters:", error);
-    }
-  }, [supabase]);
-
-  useEffect(() => {
-    if (user) {
-      fetchAds(true);
-      fetchFilters();
-    }
-  }, [user, fetchFilters]);
-
-  // مراقبة تغيير الفلاتر
-  useEffect(() => {
-    if (user) {
-      fetchAds(false);
-    }
-  }, [filters, user, fetchAds]);
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("ar-SY").format(price);
+  const handleProfileUpdate = (updatedProfile) => {
+    setUser(updatedProfile);
+    setShowProfileEdit(false);
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ar-SY", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const handleImageError = (e) => {
-    e.target.src = "/placeholder-image.jpg";
-    e.target.alt = "صورة غير متاحة";
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      category: "",
-      location: "",
-    });
-  };
-
-  const hasActiveFilters = () => {
-    return filters.category || filters.location;
-  };
-
-  if (!user) {
+  if (!user || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحقق من المصادقة...</p>
+          <p className="text-gray-600">جاري التحميل...</p>
         </div>
       </div>
     );
@@ -257,11 +107,7 @@ export default function MainPage() {
           <div className="flex flex-col gap-4 mb-auto">
             <button
               onClick={() => router.push("/main")}
-              className={`p-3 rounded-xl transition-colors ${
-                pathname === "/main"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
               title="الصفحة الرئيسية"
             >
               <Home className="w-6 h-6" />
@@ -296,7 +142,7 @@ export default function MainPage() {
           <div className="relative settings-menu-container">
             <button
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-3 bg-gray-900 text-white rounded-xl transition-colors"
               title="الإعدادات"
             >
               <Settings className="w-6 h-6" />
@@ -304,7 +150,7 @@ export default function MainPage() {
 
             {/* قائمة الإعدادات المنبثقة */}
             {showSettingsMenu && (
-              <div className="absolute ml-2 bottom-13 w-100 bg-white rounded-xl shadow-lg border py-2 z-50">
+              <div className="absolute left-full ml-2 bottom-0 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
                 <button
                   onClick={() => {
                     router.push("/settings");
@@ -318,7 +164,6 @@ export default function MainPage() {
               </div>
             )}
           </div>
-          
         </div>
       </div>
 
@@ -463,83 +308,87 @@ export default function MainPage() {
           )}
         </div>
 
-        {/* Products Grid */}
-        <div className="p-4 md:p-6">
-          {loading ? (
-            <div className="text-center py-20">
-              <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">جاري تحميل المنتجات...</p>
-            </div>
-          ) : ads.length === 0 ? (
-            <div className="text-center py-20">
-              <Search className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {hasActiveFilters()
-                  ? "لا توجد نتائج مطابقة"
-                  : "لا توجد منتجات متاحة"}
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {hasActiveFilters()
-                  ? "جرب تعديل معايير البحث أو مسح الفلاتر"
-                  : "كن أول من يضيف منتجاً في هذا القسم"}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 auto-rows-max">
-              {ads.map((product) => (
-                <div
-                  key={product.id}
-                  className="p-2 bg-white rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 hover:shadow-md"
-                  onClick={() => router.push(`/product/${product.id}`)}
-                >
-                  <div className="relative">
-                    <div
-                      className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-2"
-                      style={{ aspectRatio: "1/1" }}
-                    >
-                      <img
-                        src={
-                          product.image_urls?.[0] || "/placeholder-image.jpg"
-                        }
-                        alt={product.title}
-                        className="max-w-full max-h-full object-contain"
-                        onError={handleImageError}
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
-                      {product.category}
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {product.title}
-                    </h3>
-
-                    <div className="mb-3">
-                      <RemainingTime expiresAt={product.expires_at} />
-                    </div>
-
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-lg font-bold text-green-600">
-                        {formatPrice(product.price)} {product.currency}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        <span>{product.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(product.created_at)}</span>
-                      </div>
-                    </div>
+        {/* Settings Content */}
+        <div className="p-6 max-w-4xl mx-auto">
+          {!showProfileEdit ? (
+            <>
+              {/* Profile Section */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <img
+                    src={user.avatar_url || "/avatar.svg"}
+                    alt="صورة المستخدم"
+                    className="w-16 h-16 rounded-full border-4 object-cover"
+                    style={{ borderColor: "#1877F2" }}
+                    onError={(e) => {
+                      e.target.src = "/avatar.svg";
+                    }}
+                  />
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                      {user.full_name || "المستخدم"}
+                    </h2>
+                    <p className="text-gray-600">{user.email}</p>
                   </div>
                 </div>
-              ))}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">
+                      رقم الهاتف
+                    </h3>
+                    <p className="text-gray-900">{user.phone || "غير محدد"}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">
+                      الموقع
+                    </h3>
+                    <p className="text-gray-900">
+                      {user.location || "غير محدد"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Settings Options */}
+              <div className="bg-white rounded-2xl border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-800">
+                    إعدادات الحساب
+                  </h2>
+                </div>
+
+                <div className="p-6">
+                  <button
+                    onClick={() => setShowProfileEdit(true)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors border border-gray-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Edit3 className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div className="text-right">
+                        <h3 className="font-semibold text-gray-900">
+                          تحرير الملف الشخصي
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          قم بتحديث معلوماتك الشخصية
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-400 rotate-180" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-200">
+              <ProfileEditForm
+                user={user}
+                onClose={() => setShowProfileEdit(false)}
+                onUpdate={handleProfileUpdate}
+                supabase={supabase}
+              />
             </div>
           )}
         </div>
@@ -553,25 +402,16 @@ export default function MainPage() {
         <div className="flex items-center justify-around h-full">
           <button
             onClick={() => router.push("/main")}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              pathname === "/main" ? "text-red-500" : "text-gray-600"
-            }`}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
           >
             <Home className="w-5 h-5" />
           </button>
 
           <button
-            onClick={() => router.push("/search")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
-          >
-            <Search className="w-5 h-5" />
-          </button>
-
-          <button
             onClick={() => router.push("/add-product")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-red-500"
+            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
           >
-            <PlusCircle className="w-5 h-5" />
+            <Plus className="w-5 h-5" />
           </button>
 
           <button
@@ -583,11 +423,13 @@ export default function MainPage() {
 
           <button
             onClick={() => router.push("/dashboard")}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              pathname === "/dashboard" ? "text-red-500" : "text-gray-600"
-            }`}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
           >
             <User className="w-5 h-5" />
+          </button>
+
+          <button className="flex flex-col items-center gap-1 p-2 rounded-lg text-red-500">
+            <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>

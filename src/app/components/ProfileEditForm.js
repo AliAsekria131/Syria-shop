@@ -5,7 +5,7 @@ import {
   X,
 } from "lucide-react";
 
-// مكون تعديل الملف الشخصي - محسن
+// مكون تعديل الملف الشخصي - محسن مع Supabase Storage
 export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
   const [formData, setFormData] = useState({
     fullName: user.full_name || "",
@@ -33,23 +33,39 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
     "الحسكة",
   ];
 
-  const uploadAvatar = async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const response = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData,
+// دالة رفع الصورة إلى Supabase Storage - محدثة
+const uploadAvatar = async (file) => {
+  try {
+    // إنشاء اسم فريد للملف (نفس طريقة add-product)
+    const fileExt = file.name.split('.').pop();
+    const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`;
+    
+    // رفع الصورة إلى Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
       });
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "فشل رفع الصورة");
-      }
-      return result.url;
-    } catch (error) {
-      throw new Error("فشل في رفع الصورة: " + error.message);
+
+    if (error) {
+      console.error("Supabase upload error:", error);
+      throw new Error(error.message || "فشل في رفع الصورة");
     }
-  };
+
+    // الحصول على الرابط العام للصورة
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    console.log("Avatar upload successful, URL:", publicUrl);
+    return publicUrl;
+
+  } catch (error) {
+    console.error("Upload error:", error);
+    throw new Error("فشل في رفع الصورة: " + error.message);
+  }
+};
 
   const handleSave = async () => {
     setLoading(true);
@@ -58,10 +74,12 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
     try {
       let avatar_url = user.avatar_url;
 
+      // رفع الصورة الجديدة إذا تم اختيارها
       if (avatarFile) {
         avatar_url = await uploadAvatar(avatarFile);
       }
 
+      // تحديث بيانات المستخدم في قاعدة البيانات
       const { data: updatedProfile, error: updateError } = await supabase
         .from("profiles")
         .update({
@@ -138,12 +156,20 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
               }
             }}
             className="hidden"
+            disabled={loading}
           />
           <span
-            className="px-4 py-2 rounded-lg font-medium transition-colors hover:opacity-90"
-            style={{ backgroundColor: "#E8F4FD", color: "#1877F2" }}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              loading 
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                : "hover:opacity-90 cursor-pointer"
+            }`}
+            style={{ 
+              backgroundColor: loading ? "#E5E7EB" : "#E8F4FD", 
+              color: loading ? "#9CA3AF" : "#1877F2" 
+            }}
           >
-            تغيير الصورة
+            {loading ? "جاري الرفع..." : "تغيير الصورة"}
           </span>
         </label>
       </div>
@@ -160,6 +186,7 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
             style={{ focusRingColor: "#1877F2" }}
             placeholder="أدخل اسمك الكامل"
+            disabled={loading}
           />
         </div>
 
@@ -174,6 +201,7 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
             style={{ focusRingColor: "#1877F2" }}
             placeholder="09XXXXXXXX"
+            disabled={loading}
           />
         </div>
 
@@ -186,6 +214,7 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
             onChange={(e) => handleInputChange("location", e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent bg-white"
             style={{ focusRingColor: "#1877F2" }}
+            disabled={loading}
           >
             <option value="">اختر المحافظة</option>
             {syrianGovernorates.map((province) => (
@@ -209,7 +238,11 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
         <button
           onClick={onClose}
           disabled={loading}
-          className="flex-1 py-3 rounded-lg font-medium transition-colors border border-gray-300 hover:bg-gray-50"
+          className={`flex-1 py-3 rounded-lg font-medium transition-colors border border-gray-300 ${
+            loading 
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+              : "hover:bg-gray-50"
+          }`}
         >
           إلغاء
         </button>
