@@ -26,6 +26,7 @@ import {
   MessageCircle,
   Grid,
   List,
+  X,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -434,8 +435,43 @@ export default function Dashboard() {
         </div>
 
         {/* Mobile Header */}
-        <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200 p-4">
+        <div className="flex items-center justify-between relative md:hidden sticky top-0 z-40 bg-white border-b border-gray-200 p-4">
           <h1 className="text-xl font-bold text-center">لوحة التحكم</h1>
+
+
+            <button
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              title="الإعدادات"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
+
+          {/* Settings at bottom */}
+            {showSettingsMenu && (
+              <div className="absolute settings-menu-container ml-2 top-0 left-0 h-150 w-full bg-white rounded-xl shadow-lg py-2 z-50">
+                <button 
+                  onClick={() => {
+                    setShowSettingsMenu(false);
+                  }}
+                  >
+                  <X className="w-8 h-8 text-gray-600 float-left mr-6 mt-5" />  
+                  </button>
+                <button
+                  onClick={() => {
+                    router.push("/settings");
+                    setShowSettingsMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
+                >
+                  <Settings className="w-5 h-5 text-gray-500" />
+                  <span>الإعدادات</span>
+                </button>
+              </div>
+            )}
+       
+
+
         </div>
 
         {/* Content */}
