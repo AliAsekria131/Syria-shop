@@ -51,7 +51,6 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
             product_id: productId,
             user_id: currentUser.id,
             comment_text: newComment.trim(),
-            rating: 5, // افتراضي
           },
         ]);
 

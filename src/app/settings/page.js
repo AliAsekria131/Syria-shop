@@ -31,7 +31,7 @@ export default function SettingsPage() {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
 
-  const [showDesktopFilters, setShowDesktopFilters] = useState(false);
+  
   const [searchInputValue, setSearchInputValue] = useState("");
 
   // مستمع النقر خارج القوائم المنسدلة
@@ -173,17 +173,7 @@ export default function SettingsPage() {
         <div className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
           <div className="px-6 py-4">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-                className={`p-3 rounded-xl transition-colors ${
-                  showDesktopFilters
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-                title="الفلاتر"
-              >
-                <Filter className="w-6 h-6" />
-              </button>
+
 
               {/* Search Input */}
               <form
@@ -254,58 +244,6 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-
-          {/* Desktop Filters Panel */}
-          {showDesktopFilters && (
-            <div className="px-6 pb-4 border-b border-gray-200">
-              <div className="flex items-center gap-4">
-                <select
-                  value={filters.category}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      category: e.target.value,
-                    }))
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-red-500"
-                >
-                  <option value="">جميع الفئات</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={filters.location}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      location: e.target.value,
-                    }))
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-red-500"
-                >
-                  <option value="">جميع المواقع</option>
-                  {locations.map((location) => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
-                </select>
-
-                {hasActiveFilters() && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-red-500 hover:text-red-600 font-medium"
-                  >
-                    مسح الفلاتر
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Settings Content */}
