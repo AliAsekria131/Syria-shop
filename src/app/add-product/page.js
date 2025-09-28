@@ -19,6 +19,7 @@ import {
   LogOut,
   PlusCircle,
   Filter,
+  Heart,
 } from "lucide-react";
 
 export default function AddProductPage() {
@@ -33,7 +34,7 @@ export default function AddProductPage() {
   // المحافظات السورية
   const syrianGovernorates = [
     "دمشق",
-    "ريف دمشق", 
+    "ريف دمشق",
     "حلب",
     "حمص",
     "حماة",
@@ -84,7 +85,10 @@ export default function AddProductPage() {
   // التحقق من المصادقة
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
       if (error || !user) {
         router.push("/");
         return;
@@ -150,32 +154,34 @@ export default function AddProductPage() {
     setTimeout(() => setErrors([]), 5000);
   };
 
-const uploadImage = async (file) => {
-  // إنشاء اسم فريد للملف
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-  
-  // رفع الصورة إلى Supabase Storage
-  const { data, error } = await supabase.storage
-    .from('product-images')
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
+  const uploadImage = async (file) => {
+    // إنشاء اسم فريد للملف
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()
+      .toString(36)
+      .substring(2)}-${Date.now()}.${fileExt}`;
 
-  if (error) {
-    console.error("Supabase upload error:", error);
-    throw new Error(error.message || "فشل في رفع الصورة");
-  }
+    // رفع الصورة إلى Supabase Storage
+    const { data, error } = await supabase.storage
+      .from("product-images")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-  // الحصول على الرابط العام للصورة
-  const { data: { publicUrl } } = supabase.storage
-    .from('product-images')
-    .getPublicUrl(fileName);
+    if (error) {
+      console.error("Supabase upload error:", error);
+      throw new Error(error.message || "فشل في رفع الصورة");
+    }
 
-  console.log("Upload successful, URL:", publicUrl);
-  return publicUrl;
-};
+    // الحصول على الرابط العام للصورة
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("product-images").getPublicUrl(fileName);
+
+    console.log("Upload successful, URL:", publicUrl);
+    return publicUrl;
+  };
 
   // دالة إضافة المنتج
   const handleAddProduct = async () => {
@@ -308,12 +314,13 @@ const uploadImage = async (file) => {
               <Plus className="w-6 h-6" />
             </button>
 
+            {/* زر المفضلة الجديد مع تمييز حسب المسار */}
             <button
-              onClick={() => router.push("/messages")}
+              onClick={() => router.push("/favorites")}
               className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="الرسائل"
+              title="المفضلة"
             >
-              <MessageCircle className="w-6 h-6" />
+              <Heart className="w-6 h-6" />
             </button>
           </div>
 
@@ -353,14 +360,14 @@ const uploadImage = async (file) => {
           <div className="px-6 py-4">
             <div className="flex items-center gap-4">
               {/* Search Bar */}
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   const searchValue = e.target.search.value.trim();
                   if (searchValue) {
                     router.push(`/search?q=${encodeURIComponent(searchValue)}`);
                   } else {
-                    router.push('/search');
+                    router.push("/search");
                   }
                 }}
                 className="flex-1 relative"
@@ -439,7 +446,7 @@ const uploadImage = async (file) => {
         <div className="max-w-4xl mx-auto p-4 md:p-6">
           {/* Page Title */}
           <h1 className="text-2xl font-bold text-gray-900 mb-8">إنشاء منشور</h1>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Side - Image Upload */}
             <div className="space-y-4">
@@ -641,10 +648,10 @@ const uploadImage = async (file) => {
           </button>
 
           <button
-            onClick={() => router.push("/messages")}
+            onClick={() => router.push("/favorites")}
             className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
-            <MessageCircle className="w-5 h-5" />
+            <Heart className="w-5 h-5 fill-current" />
           </button>
 
           <button

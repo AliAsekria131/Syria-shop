@@ -19,6 +19,7 @@ import {
   LogOut,
   MessageCircle,
   Menu,
+  Heart,
 } from "lucide-react";
 import { getCurrentUser } from "../../utils/auth";
 import { useExpiredAdsChecker } from "../../utils/checkExpiredAds";
@@ -282,12 +283,13 @@ export default function MainPage() {
               <Plus className="w-6 h-6" />
             </button>
 
+            {/* زر المفضلة الجديد مع تمييز حسب المسار */}
             <button
-              onClick={() => router.push("/messages")}
+              onClick={() => router.push("/favorites")}
               className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="الرسائل"
+              title="المفضلة"
             >
-              <MessageCircle className="w-6 h-6" />
+              <Heart className="w-6 h-6" />
             </button>
           </div>
 
@@ -317,7 +319,6 @@ export default function MainPage() {
               </div>
             )}
           </div>
-          
         </div>
       </div>
 
@@ -327,7 +328,6 @@ export default function MainPage() {
         <div className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
           <div className="px-6 py-4">
             <div className="flex items-center gap-4">
-
               {/* Search Input */}
               <form
                 onSubmit={(e) => {
@@ -511,10 +511,10 @@ export default function MainPage() {
           </button>
 
           <button
-            onClick={() => router.push("/messages")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            onClick={() => router.push("/favorites")}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
-            <MessageCircle className="w-5 h-5" />
+            <Heart className="w-5 h-5 fill-current" />
           </button>
 
           <button

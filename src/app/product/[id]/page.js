@@ -32,9 +32,19 @@ import {
 
 import Comments from "../../components/Comments";
 
+import ContactButton from '../../components/ContactButton';
+
 // أولاً: أضف هذا الاستيراد في بداية الملف
 import RemainingTime from "../../components/RemainingTime";
 import { renewAd } from "../../../utils/renewAd";
+
+// إضافة هذا الاستيراد في أعلى الملف مع باقي الاستيرادات:
+import {
+  addLike,
+  removeLike,
+  checkLike,
+  getLikesCount,
+} from "../../../utils/likes";
 
 export default function ProductDetailsPage() {
   const supabase = createClientComponentClient();
@@ -128,7 +138,77 @@ export default function ProductDetailsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showUserMenu]);
 
+  //الحالات الخاصة بالاعجابات
+  // إضافة هذه الحالات بعد الحالات الموجودة:
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
 
+  // إضافة هذا useEffect لجلب حالة الإعجاب بعد جلب المنتج:
+  useEffect(() => {
+    const fetchLikeStatus = async () => {
+      if (!currentUser || !productId) return;
+
+      try {
+        // التحقق من وجود إعجاب
+        const likeResult = await checkLike(currentUser.id, productId);
+        if (likeResult.success) {
+          setIsLiked(likeResult.liked);
+        }
+
+        // جلب عدد الإعجابات
+        const countResult = await getLikesCount(productId);
+        if (countResult.success) {
+          setLikesCount(countResult.count);
+        }
+      } catch (error) {
+        console.error("خطأ في جلب حالة الإعجاب:", error);
+      }
+    };
+
+    if (product && currentUser) {
+      fetchLikeStatus();
+    }
+  }, [currentUser, productId, product]);
+
+  // إضافة دالة التعامل مع الإعجاب:
+  const handleLike = async () => {
+    if (!currentUser) {
+      alert("يرجى تسجيل الدخول أولاً");
+      return;
+    }
+
+    if (likeLoading) return;
+
+    try {
+      setLikeLoading(true);
+
+      if (isLiked) {
+        // إزالة الإعجاب
+        const result = await removeLike(currentUser.id, productId);
+        if (result.success) {
+          setIsLiked(false);
+          setLikesCount((prev) => Math.max(0, prev - 1));
+        } else {
+          alert("حدث خطأ في إزالة الإعجاب");
+        }
+      } else {
+        // إضافة إعجاب
+        const result = await addLike(currentUser.id, productId);
+        if (result.success) {
+          setIsLiked(true);
+          setLikesCount((prev) => prev + 1);
+        } else {
+          alert("حدث خطأ في إضافة الإعجاب");
+        }
+      }
+    } catch (error) {
+      console.error("خطأ في التعامل مع الإعجاب:", error);
+      alert("حدث خطأ، يرجى المحاولة مرة أخرى");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   // بعد تعريف جميع الحالات وقبل useEffect الأول
   const isValidImageUrl = (url) => {
@@ -562,7 +642,6 @@ export default function ProductDetailsPage() {
         <div className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
           <div className="px-6 py-4">
             <div className="flex items-center gap-4">
-
               {/* Search Input */}
               <form
                 onSubmit={(e) => {
@@ -637,12 +716,12 @@ export default function ProductDetailsPage() {
         {/* Products Content Area */}
         <div className="p-4 md:p-6">
           {/* Title */}
-       
-<div className="mb-6">
-  <h1 className="text-2xl font-bold text-gray-900 pb-3 border-b-2 border-gray-200">
-    تفاصيل المنتج
-  </h1>
-</div>
+
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 pb-3 border-b-2 border-gray-200">
+              تفاصيل المنتج
+            </h1>
+          </div>
           {loading && (
             <div className="text-center py-20">
               <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -717,13 +796,25 @@ export default function ProductDetailsPage() {
                             <Share className="w-5 h-5 text-gray-700" />
                           </button>
                           <button
-                            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                            onClick={handleLike}
+                            disabled={likeLoading}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
+                              likeLoading ? "opacity-50" : ""
+                            }`}
                             style={{
-                              backgroundColor: "rgba(255, 255, 255, 0.9)",
+                              backgroundColor: isLiked
+                                ? "rgba(239, 68, 68, 0.9)"
+                                : "rgba(255, 255, 255, 0.9)",
                               backdropFilter: "blur(4px)",
                             }}
                           >
-                            <Heart className="w-5 h-5 text-gray-700" />
+                            <Heart
+                              className={`w-5 h-5 ${
+                                isLiked
+                                  ? "text-white fill-current"
+                                  : "text-gray-700"
+                              }`}
+                            />
                           </button>
                         </div>
 
@@ -752,11 +843,32 @@ export default function ProductDetailsPage() {
 
                       {/* Product Info */}
                       <div className="p-6">
+					  {/* في بطاقة المنتج*/}
+                        <div className="contact-buttons flex gap-2">
+                          {seller.phone && (
+                            <>
+                              <ContactButton
+                                type="whatsapp"
+                                value={seller.phone}
+                              />
+                              <ContactButton
+                                type="phone"
+                                value={seller.phone}
+                              />
+                              <ContactButton
+                                type="telegram"
+                                value={seller.phone}
+                              />
+                            </>
+                          )}
+                          {seller.email && (
+                            <ContactButton type="email" value={seller.email} />
+                          )}
+                        </div>
                         {/* باقي المحتوى كما هو */}
                         <h1 className="text-xl font-bold text-gray-900 mb-4">
                           {product.title}
                         </h1>
-
                         {/* Horizontal Info Layout */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="text-2xl font-bold text-green-600">
@@ -767,12 +879,10 @@ export default function ProductDetailsPage() {
                             <span>{product.location}</span>
                           </div>
                         </div>
-
                         {/* Description */}
                         <p className="text-gray-600 text-sm leading-relaxed mb-4">
                           {product.description}
                         </p>
-
                         {/* Seller Info */}
                         <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
                           <img
@@ -792,7 +902,6 @@ export default function ProductDetailsPage() {
                             </div>
                           </div>
                         </div>
-
                         {/* Additional Info */}
                         <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                           <span className="flex items-center gap-1">
@@ -803,7 +912,6 @@ export default function ProductDetailsPage() {
                             {product.category}
                           </span>
                         </div>
-
                         {/* Comments Section */}
                         <div id="comments-section">
                           <Comments
@@ -919,33 +1027,7 @@ export default function ProductDetailsPage() {
 
                   {/* Mobile Action Buttons */}
                   <div className="p-4 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <button className="bg-red-500 text-white px-6 py-2 rounded-full font-medium">
-                        حفظ
-                      </button>
-                      <div className="flex gap-3">
-                        <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
-                          <Share className="w-5 h-5 text-gray-600" />
-                        </button>
-                        <button
-                          onClick={() => setShowMobileComments(true)}
-                          className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300"
-                        >
-                          <MessageCircle className="w-5 h-5 text-gray-600" />
-                          <span className="text-sm">التعليقات</span>
-                        </button>
-
-                        <button className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300">
-                          <Heart className="w-5 h-5 text-gray-600" />
-                          <span className="text-sm">79</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
+				                      <div className="flex items-center gap-2 mb-2">
                       <img
                         src={seller?.avatar_url || "/avatar.svg"}
                         alt="البائع"
@@ -957,6 +1039,72 @@ export default function ProductDetailsPage() {
                         </div>
                       </div>
                     </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-3">
+                        <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
+                          <Share className="w-5 h-5 text-gray-600" />
+                        </button>
+                        <button
+                          onClick={() => setShowMobileComments(true)}
+                          className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300"
+                        >
+                          <MessageCircle className="w-5 h-5 text-gray-600" />
+                        </button>
+
+                        <button
+                          onClick={handleLike}
+                          disabled={likeLoading}
+                          className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all ${
+                            isLiked
+                              ? "border-red-500 bg-red-50"
+                              : "border-gray-300"
+                          } ${likeLoading ? "opacity-50" : ""}`}
+                        >
+                          <Heart
+                            className={`w-5 h-5 ${
+                              isLiked
+                                ? "text-red-500 fill-current"
+                                : "text-gray-600"
+                            }`}
+                          />
+                          <span
+                            className={`text-sm ${
+                              isLiked ? "text-red-500" : "text-gray-600"
+                            }`}
+                          >
+                            {likesCount}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Product Info */}
+                  <div className="p-4">
+				  					  {/* في بطاقة المنتج*/}
+                        <div className="contact-buttons flex gap-2">
+                          {seller.phone && (
+                            <>
+                              <ContactButton
+                                type="whatsapp"
+                                value={seller.phone}
+                              />
+                              <ContactButton
+                                type="phone"
+                                value={seller.phone}
+                              />
+                              <ContactButton
+                                type="telegram"
+                                value={seller.phone}
+                              />
+                            </>
+                          )}
+                          {seller.email && (
+                            <ContactButton type="email" value={seller.email} />
+                          )}
+                        </div>
+						 <hr className="my-4 border-gray-200" />
+
 
                     <h1 className="text-xl font-bold text-gray-900 mb-3">
                       {product.title}

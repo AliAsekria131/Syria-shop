@@ -26,6 +26,7 @@ import {
   MessageCircle,
   Grid,
   List,
+  Heart,
   X,
 } from "lucide-react";
 
@@ -332,12 +333,13 @@ export default function Dashboard() {
               <Plus className="w-6 h-6" />
             </button>
 
+            {/* زر المفضلة الجديد مع تمييز حسب المسار */}
             <button
-              onClick={() => router.push("/messages")}
+              onClick={() => router.push("/favorites")}
               className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="الرسائل"
+              title="المفضلة"
             >
-              <MessageCircle className="w-6 h-6" />
+              <Heart className="w-6 h-6" />
             </button>
           </div>
 
@@ -865,10 +867,10 @@ export default function Dashboard() {
           </button>
 
           <button
-            onClick={() => router.push("/messages")}
+            onClick={() => router.push("/favorites")}
             className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
-            <MessageCircle className="w-5 h-5" />
+            <Heart className="w-5 h-5 fill-current" />
           </button>
 
           <button

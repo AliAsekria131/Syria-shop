@@ -16,6 +16,8 @@ import {
   ArrowRight,
   Search,
   Filter,
+  Heart,
+  PlusCircle,
 } from "lucide-react";
 import { getCurrentUser } from "../../utils/auth";
 import ProfileEditForm from "../components/ProfileEditForm";
@@ -129,12 +131,13 @@ export default function SettingsPage() {
               <Plus className="w-6 h-6" />
             </button>
 
+            {/* زر المفضلة الجديد مع تمييز حسب المسار */}
             <button
-              onClick={() => router.push("/messages")}
+              onClick={() => router.push("/favorites")}
               className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="الرسائل"
+              title="المفضلة"
             >
-              <MessageCircle className="w-6 h-6" />
+              <Heart className="w-6 h-6" />
             </button>
           </div>
 
@@ -340,34 +343,37 @@ export default function SettingsPage() {
         <div className="flex items-center justify-around h-full">
           <button
             onClick={() => router.push("/main")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
             <Home className="w-5 h-5" />
           </button>
 
           <button
-            onClick={() => router.push("/add-product")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            onClick={() => router.push("/search")}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
-            <Plus className="w-5 h-5" />
+            <Search className="w-5 h-5" />
           </button>
 
           <button
-            onClick={() => router.push("/messages")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            onClick={() => router.push("/add-product")}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg text-red-500"
           >
-            <MessageCircle className="w-5 h-5" />
+            <PlusCircle className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={() => router.push("/favorites")}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
+          >
+            <Heart className="w-5 h-5 fill-current" />
           </button>
 
           <button
             onClick={() => router.push("/dashboard")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
             <User className="w-5 h-5" />
-          </button>
-
-          <button className="flex flex-col items-center gap-1 p-2 rounded-lg text-red-500">
-            <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>
