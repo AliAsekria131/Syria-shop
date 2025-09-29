@@ -1,44 +1,23 @@
-// product - id
+// product/[id]/page.js
 "use client";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter, useParams, usePathname } from "next/navigation";
-import { getCurrentUser } from "../../../utils/auth";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
-  Home,
-  User,
-  Plus,
-  ChevronDown,
-  LogOut,
-  Settings,
-  Share,
-  Heart,
-  X,
   ArrowLeft,
   MapPin,
   Calendar,
-  Phone,
-  Mail,
-  Copy,
+  Share,
+  Heart,
   MessageCircle,
-  Send,
-  Shield,
-  Star,
-  PlusCircle,
-  Filter,
-  Search,
 } from "lucide-react";
 
 import Comments from "../../components/Comments";
-
 import ContactButton from '../../components/ContactButton';
-
-// أولاً: أضف هذا الاستيراد في بداية الملف
 import RemainingTime from "../../components/RemainingTime";
+import AppLayout from "../../components/AppLayout";
 import { renewAd } from "../../../utils/renewAd";
-
-// إضافة هذا الاستيراد في أعلى الملف مع باقي الاستيرادات:
 import {
   addLike,
   removeLike,
@@ -49,7 +28,6 @@ import {
 export default function ProductDetailsPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
-  const pathname = usePathname();
   const params = useParams();
   const productId = params.id;
 
@@ -62,160 +40,21 @@ export default function ProductDetailsPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-
-  // حساب متوسط التقييم
   const [averageRating, setAverageRating] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
-
-  // ثانياً: أضف هذه الحالات الجديدة بعد الحالات الموجودة
   const [renewLoading, setRenewLoading] = useState(false);
-
   const [relatedProducts, setRelatedProducts] = useState([]);
-
-  // أضف هذه مع باقي الحالات
   const [showMobileComments, setShowMobileComments] = useState(false);
 
-  // البحث والفلاتير في الشريط العلوي
-  const [searchInputValue, setSearchInputValue] = useState("");
-  // حالات الفلاتر
-  const [filters, setFilters] = useState({
-    category: "",
-    location: "",
-  });
-  const [categories, setCategories] = useState([]);
-  const [locations, setLocations] = useState([]);
-
-  const hasActiveFilters = () => {
-    return filters.category || filters.location;
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      category: "",
-      location: "",
-    });
-  };
-  const fetchFilters = useCallback(async () => {
-    try {
-      const { data: categoryData } = await supabase
-        .from("ads")
-        .select("category")
-        .eq("status", "active");
-
-      const uniqueCategories = [
-        ...new Set(
-          categoryData?.map((item) => item.category).filter(Boolean) || []
-        ),
-      ];
-      setCategories(uniqueCategories);
-
-      const { data: locationData } = await supabase
-        .from("ads")
-        .select("location")
-        .eq("status", "active");
-
-      const uniqueLocations = [
-        ...new Set(
-          locationData?.map((item) => item.location).filter(Boolean) || []
-        ),
-      ];
-      setLocations(uniqueLocations);
-    } catch (error) {
-      console.error("Error fetching filters:", error);
-    }
-  }, [supabase]);
-
-  // إضافة مستمع للنقر خارج القائمة المنسدلة
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserMenu && !event.target.closest(".user-menu-container")) {
-        setShowUserMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showUserMenu]);
-
-  //الحالات الخاصة بالاعجابات
-  // إضافة هذه الحالات بعد الحالات الموجودة:
+  // الحالات الخاصة بالإعجابات
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
 
-  // إضافة هذا useEffect لجلب حالة الإعجاب بعد جلب المنتج:
-  useEffect(() => {
-    const fetchLikeStatus = async () => {
-      if (!currentUser || !productId) return;
-
-      try {
-        // التحقق من وجود إعجاب
-        const likeResult = await checkLike(currentUser.id, productId);
-        if (likeResult.success) {
-          setIsLiked(likeResult.liked);
-        }
-
-        // جلب عدد الإعجابات
-        const countResult = await getLikesCount(productId);
-        if (countResult.success) {
-          setLikesCount(countResult.count);
-        }
-      } catch (error) {
-        console.error("خطأ في جلب حالة الإعجاب:", error);
-      }
-    };
-
-    if (product && currentUser) {
-      fetchLikeStatus();
-    }
-  }, [currentUser, productId, product]);
-
-  // إضافة دالة التعامل مع الإعجاب:
-  const handleLike = async () => {
-    if (!currentUser) {
-      alert("يرجى تسجيل الدخول أولاً");
-      return;
-    }
-
-    if (likeLoading) return;
-
-    try {
-      setLikeLoading(true);
-
-      if (isLiked) {
-        // إزالة الإعجاب
-        const result = await removeLike(currentUser.id, productId);
-        if (result.success) {
-          setIsLiked(false);
-          setLikesCount((prev) => Math.max(0, prev - 1));
-        } else {
-          alert("حدث خطأ في إزالة الإعجاب");
-        }
-      } else {
-        // إضافة إعجاب
-        const result = await addLike(currentUser.id, productId);
-        if (result.success) {
-          setIsLiked(true);
-          setLikesCount((prev) => prev + 1);
-        } else {
-          alert("حدث خطأ في إضافة الإعجاب");
-        }
-      }
-    } catch (error) {
-      console.error("خطأ في التعامل مع الإعجاب:", error);
-      alert("حدث خطأ، يرجى المحاولة مرة أخرى");
-    } finally {
-      setLikeLoading(false);
-    }
-  };
-
-  // بعد تعريف جميع الحالات وقبل useEffect الأول
+  // التحقق من صحة رابط الصورة
   const isValidImageUrl = (url) => {
     if (!url) return false;
     if (url.includes("placeholder-image.jpg")) return true;
-
-    // التحقق من وجود امتداد صورة صحيح
     const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
     return validExtensions.some((ext) => url.toLowerCase().includes(ext));
   };
@@ -223,13 +62,15 @@ export default function ProductDetailsPage() {
   // التحقق من المصادقة وجلب المستخدم الحالي
   useEffect(() => {
     const checkAuth = async () => {
-      const user = await getCurrentUser(supabase);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      
       if (!user) {
         router.push("/main");
         return;
       }
 
-      // جلب بيانات الملف الشخصي
       const { data: userProfile } = await supabase
         .from("profiles")
         .select("*")
@@ -263,9 +104,7 @@ export default function ProductDetailsPage() {
           const now = new Date();
           const expiresAt = new Date(productData.expires_at);
 
-          // إذا انتهت صلاحية الإعلان ولكن حالته ما زالت active
           if (expiresAt < now && productData.status === "active") {
-            // تحديث حالة الإعلان إلى منتهي الصلاحية
             await supabase
               .from("ads")
               .update({ status: "expired" })
@@ -274,7 +113,6 @@ export default function ProductDetailsPage() {
             productData.status = "expired";
           }
 
-          // إذا كان الإعلان منتهي الصلاحية وليس مالك الإعلان
           if (
             productData.status === "expired" &&
             productData.user_id !== currentUser.id
@@ -288,8 +126,6 @@ export default function ProductDetailsPage() {
         }
 
         setProduct(productData);
-
-        // التحقق من كون المستخدم الحالي هو صاحب المنتج
         setIsOwner(productData.user_id === currentUser.id);
 
         // جلب معلومات البائع
@@ -301,7 +137,6 @@ export default function ProductDetailsPage() {
 
         if (sellerError) {
           console.warn("تعذر جلب معلومات البائع:", sellerError);
-          // إنشاء بيانات افتراضية للبائع
           setSeller({
             id: productData.user_id,
             full_name: null,
@@ -315,7 +150,6 @@ export default function ProductDetailsPage() {
         // جلب المنتجات ذات الصلة
         let relatedData = [];
 
-        // أولاً: جلب المنتجات من نفس التصنيف ونفس الموقع
         const { data: sameCategoryLocation } = await supabase
           .from("ads")
           .select("*")
@@ -329,7 +163,6 @@ export default function ProductDetailsPage() {
           relatedData = [...relatedData, ...sameCategoryLocation];
         }
 
-        // إذا لم نحصل على منتجات كافية، جلب المزيد من نفس التصنيف (مواقع مختلفة)
         if (relatedData.length < 6) {
           const remainingLimit = 6 - relatedData.length;
           const { data: sameCategoryOnly } = await supabase
@@ -346,7 +179,6 @@ export default function ProductDetailsPage() {
           }
         }
 
-        // إذا ما زلنا نحتاج المزيد، جلب منتجات من نفس الموقع (تصنيفات مختلفة)
         if (relatedData.length < 6) {
           const remainingLimit = 6 - relatedData.length;
           const { data: sameLocationOnly } = await supabase
@@ -375,13 +207,32 @@ export default function ProductDetailsPage() {
     fetchProductDetails();
   }, [currentUser, productId, supabase]);
 
+  // جلب حالة الإعجاب
   useEffect(() => {
-    if (currentUser) {
-      fetchFilters();
-    }
-  }, [currentUser, productId, supabase]);
+    const fetchLikeStatus = async () => {
+      if (!currentUser || !productId) return;
 
-  // ثالثاً: أضف هذه الدالة قبل دالة handleLogout
+      try {
+        const likeResult = await checkLike(currentUser.id, productId);
+        if (likeResult.success) {
+          setIsLiked(likeResult.liked);
+        }
+
+        const countResult = await getLikesCount(productId);
+        if (countResult.success) {
+          setLikesCount(countResult.count);
+        }
+      } catch (error) {
+        console.error("خطأ في جلب حالة الإعجاب:", error);
+      }
+    };
+
+    if (product && currentUser) {
+      fetchLikeStatus();
+    }
+  }, [currentUser, productId, product]);
+
+  // دالة تجديد الإعلان
   const handleRenewAd = async () => {
     if (!confirm("هل تريد تجديد هذا الإعلان لـ 7 أيام إضافية؟")) {
       return;
@@ -393,7 +244,6 @@ export default function ProductDetailsPage() {
 
       if (result.success) {
         alert("✅ تم تجديد الإعلان بنجاح!");
-        // إعادة تحميل بيانات المنتج لعرض الوقت الجديد
         window.location.reload();
       } else {
         alert("❌ " + result.message);
@@ -406,29 +256,48 @@ export default function ProductDetailsPage() {
     }
   };
 
-  // دالة تسجيل الخروج
-  const handleLogout = async () => {
-    if (!window.confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+  // دالة التعامل مع الإعجاب
+  const handleLike = async () => {
+    if (!currentUser) {
+      alert("يرجى تسجيل الدخول أولاً");
       return;
     }
+
+    if (likeLoading) return;
+
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw new Error(error.message);
+      setLikeLoading(true);
+
+      if (isLiked) {
+        const result = await removeLike(currentUser.id, productId);
+        if (result.success) {
+          setIsLiked(false);
+          setLikesCount((prev) => Math.max(0, prev - 1));
+        } else {
+          alert("حدث خطأ في إزالة الإعجاب");
+        }
+      } else {
+        const result = await addLike(currentUser.id, productId);
+        if (result.success) {
+          setIsLiked(true);
+          setLikesCount((prev) => prev + 1);
+        } else {
+          alert("حدث خطأ في إضافة الإعجاب");
+        }
       }
-      router.push("/");
-    } catch (err) {
-      console.error("Error signing out:", err);
-      alert("حدث خطأ في تسجيل الخروج");
+    } catch (error) {
+      console.error("خطأ في التعامل مع الإعجاب:", error);
+      alert("حدث خطأ، يرجى المحاولة مرة أخرى");
+    } finally {
+      setLikeLoading(false);
     }
   };
 
-  // دالة تنسيق السعر
+  // دوال التنسيق
   const formatPrice = (price) => {
     return new Intl.NumberFormat("ar-SY").format(price);
   };
 
-  // دالة تنسيق التاريخ
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("ar-SY", {
@@ -443,7 +312,6 @@ export default function ProductDetailsPage() {
   const handleImageError = (e) => {
     console.log("❌ Image failed:", e.target.src);
 
-    // منع التكرار اللانهائي
     if (e.target.src.includes("/placeholder-image.jpg")) {
       return;
     }
@@ -455,7 +323,7 @@ export default function ProductDetailsPage() {
     e.target.alt = "صورة غير متاحة";
   };
 
-  // دالة التنقل بين الصور
+  // دوال التنقل بين الصور
   const goToImage = (index) => {
     setCurrentImageIndex(index);
   };
@@ -476,14 +344,13 @@ export default function ProductDetailsPage() {
     }
   };
 
-  // دالة نسخ رقم الهاتف
+  // دوال النسخ والفتح
   const copyToClipboard = (text, type) => {
     navigator.clipboard.writeText(text).then(() => {
       alert(`تم نسخ ${type} بنجاح!`);
     });
   };
 
-  // دالة فتح تطبيق خارجي
   const openExternalApp = (type, value) => {
     let url = "";
     switch (type) {
@@ -508,32 +375,21 @@ export default function ProductDetailsPage() {
   // شاشة التحميل
   if (loading) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: "#F0F2F5" }}>
+      <AppLayout>
         <div className="flex items-center justify-center pt-20">
           <div className="text-center">
-            <div
-              className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-              style={{ borderColor: "#1877F2", borderTopColor: "transparent" }}
-            ></div>
+            <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 border-red-500"></div>
             <p className="text-gray-600">جاري تحميل تفاصيل المنتج...</p>
           </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
-
-  <style jsx>{`
-    .force-image-display img {
-      display: block !important;
-      min-height: 200px !important;
-      background-color: #f3f4f6 !important;
-    }
-  `}</style>;
 
   // عرض الخطأ
   if (error) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: "#F0F2F5" }}>
+      <AppLayout>
         <div className="flex items-center justify-center pt-20">
           <div className="text-center max-w-md mx-auto p-6">
             <div className="text-6xl mb-4">❌</div>
@@ -548,687 +404,415 @@ export default function ProductDetailsPage() {
               </button>
               <button
                 onClick={() => router.push("/main")}
-                className="px-4 py-2 text-white rounded-lg hover:opacity-90"
-                style={{ backgroundColor: "#1877F2" }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
               >
                 الصفحة الرئيسية
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: "#F0F2F5" }}>
+      <AppLayout>
         <div className="flex items-center justify-center pt-20">
           <div className="text-center">
             <p className="text-gray-600">المنتج غير موجود</p>
           </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
-  // استبدل الجزء من بداية return حتى نهاية div الرئيسي في ملف product/[id]/page.js
   return (
-    <div className="min-h-screen bg-white" dir="rtl" lang="ar">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block fixed right-0 top-0 h-full w-20 bg-white border-l border-gray-200 z-50">
-        <div className="flex flex-col items-center py-6 h-full">
-          {/* Logo */}
-          <button
-            onClick={() => router.push("/main")}
-            className="mb-8 p-3 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors"
-          >
-            <Home className="w-6 h-6" />
-          </button>
-
-          {/* Navigation Icons */}
-          <div className="flex flex-col gap-4 mb-auto">
-            <button
-              onClick={() => router.push("/main")}
-              className={`p-3 rounded-xl transition-colors ${
-                pathname === "/main"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-              title="الصفحة الرئيسية"
-            >
-              <Home className="w-6 h-6" />
-            </button>
-
-            <button
-              onClick={() => router.push("/search")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="البحث"
-            >
-              <Search className="w-6 h-6" />
-            </button>
-
-            <button
-              onClick={() => router.push("/add-product")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="إضافة منتج"
-            >
-              <Plus className="w-6 h-6" />
-            </button>
-
-            <button
-              onClick={() => router.push("/messages")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="الرسائل"
-            >
-              <MessageCircle className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Settings at bottom */}
-          <button
-            onClick={() => router.push("/settings")}
-            className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-            title="الإعدادات"
-          >
-            <Settings className="w-6 h-6" />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="md:mr-20">
-        {/* Top Bar - Desktop */}
-        <div className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
-          <div className="px-6 py-4">
-            <div className="flex items-center gap-4">
-              {/* Search Input */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (searchInputValue.trim()) {
-                    router.push(
-                      `/search?q=${encodeURIComponent(searchInputValue)}`
-                    );
-                  } else {
-                    router.push("/search");
-                  }
-                }}
-                className="flex-1 relative"
-              >
-                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="ابحث في المنتجات..."
-                  value={searchInputValue}
-                  onChange={(e) => setSearchInputValue(e.target.value)}
-                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-full border-2 border-gray-200 hover:border-red-300 focus:border-red-500 focus:outline-none"
-                />
-              </form>
-
-              {/* User Menu */}
-              <div className="relative user-menu-container">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <img
-                    src={currentUser.avatar_url || "/avatar.svg"}
-                    alt="صورة المستخدم"
-                    className="w-10 h-10 rounded-full border-2 border-gray-200 object-cover"
-                    onError={(e) => {
-                      e.target.src = "/avatar.svg";
-                    }}
-                  />
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
-                    <button
-                      onClick={() => {
-                        router.push("/dashboard");
-                        setShowUserMenu(false);
-                      }}
-                      className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
-                    >
-                      <User className="w-5 h-5 text-gray-500" />
-                      <span>الملف الشخصي</span>
-                    </button>
-                    <hr className="my-1" />
-                    <button
-                      onClick={async () => {
-                        await supabase.auth.signOut();
-                        router.push("/");
-                      }}
-                      className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3 text-red-600"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span>تسجيل الخروج</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+    <AppLayout>
+      <div className="p-4 md:p-6">
+        {/* Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 pb-3 border-b-2 border-gray-200">
+            تفاصيل المنتج
+          </h1>
         </div>
 
-        {/* Products Content Area */}
-        <div className="p-4 md:p-6">
-          {/* Title */}
-
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 pb-3 border-b-2 border-gray-200">
-              تفاصيل المنتج
-            </h1>
-          </div>
-          {loading && (
-            <div className="text-center py-20">
-              <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">جاري تحميل تفاصيل المنتج...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-20">
-              <div className="text-6xl mb-4">❌</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">خطأ</h2>
-              <p className="text-gray-600 mb-4">{error}</p>
-              <button
-                onClick={() => router.push("/main")}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-              >
-                العودة للرئيسية
-              </button>
-            </div>
-          )}
-
-          {!loading && !error && product && seller && (
-            <>
-              {/* Desktop Layout main img */}
-              <div className="hidden md:block">
-                <div className="flex gap-6">
-                  {/* Left Side - Main Product Card */}
-                  <div className="w-1/2">
-                    <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 sticky top-24">
-                      {/* Image Container - التحديث الجديد */}
-                      <div className="relative group p-4">
-                        {/* حاوية الصورة مع نسبة ثابتة */}
-                        <div
-                          className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-4"
-                          style={{ aspectRatio: "4/3" }}
-                        >
-                          <img
-                            src={
-                              product.image_urls?.[0] ||
-                              "/placeholder-image.jpg"
-                            }
-                            alt={product.title}
-                            className="max-w-full max-h-full object-contain"
-                            onError={handleImageError}
-                            loading="lazy"
-                          />
-                        </div>
-
-                        {/* Static Action Buttons - Always Visible */}
-                        <div className="absolute top-6 right-6 flex flex-col gap-2">
-                          <button
-                            onClick={() =>
-                              document
-                                .getElementById("comments-section")
-                                ?.scrollIntoView({ behavior: "smooth" })
-                            }
-                            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                            style={{
-                              backgroundColor: "rgba(255, 255, 255, 0.9)",
-                              backdropFilter: "blur(4px)",
-                            }}
-                          >
-                            <MessageCircle className="w-5 h-5 text-gray-700" />
-                          </button>
-                          <button
-                            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                            style={{
-                              backgroundColor: "rgba(255, 255, 255, 0.9)",
-                              backdropFilter: "blur(4px)",
-                            }}
-                          >
-                            <Share className="w-5 h-5 text-gray-700" />
-                          </button>
-                          <button
-                            onClick={handleLike}
-                            disabled={likeLoading}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
-                              likeLoading ? "opacity-50" : ""
-                            }`}
-                            style={{
-                              backgroundColor: isLiked
-                                ? "rgba(239, 68, 68, 0.9)"
-                                : "rgba(255, 255, 255, 0.9)",
-                              backdropFilter: "blur(4px)",
-                            }}
-                          >
-                            <Heart
-                              className={`w-5 h-5 ${
-                                isLiked
-                                  ? "text-white fill-current"
-                                  : "text-gray-700"
-                              }`}
-                            />
-                          </button>
-                        </div>
-
-                        {/* Navigation Arrows */}
-                        {product.image_urls?.length > 1 && (
-                          <>
-                            <button
-                              className="absolute left-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              style={{
-                                backgroundColor: "rgba(255, 255, 255, 0.8)",
-                              }}
-                            >
-                              <ArrowLeft className="w-5 h-5 text-gray-700" />
-                            </button>
-                            <button
-                              className="absolute right-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              style={{
-                                backgroundColor: "rgba(255, 255, 255, 0.8)",
-                              }}
-                            >
-                              <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="p-6">
-					  {/* في بطاقة المنتج*/}
-                        <div className="contact-buttons flex gap-2">
-                          {seller.phone && (
-                            <>
-                              <ContactButton
-                                type="whatsapp"
-                                value={seller.phone}
-                              />
-                              <ContactButton
-                                type="phone"
-                                value={seller.phone}
-                              />
-                              <ContactButton
-                                type="telegram"
-                                value={seller.phone}
-                              />
-                            </>
-                          )}
-                          {seller.email && (
-                            <ContactButton type="email" value={seller.email} />
-                          )}
-                        </div>
-                        {/* باقي المحتوى كما هو */}
-                        <h1 className="text-xl font-bold text-gray-900 mb-4">
-                          {product.title}
-                        </h1>
-                        {/* Horizontal Info Layout */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="text-2xl font-bold text-green-600">
-                            {formatPrice(product.price)} {product.currency}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <MapPin className="w-4 h-4" />
-                            <span>{product.location}</span>
-                          </div>
-                        </div>
-                        {/* Description */}
-                        <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                          {product.description}
-                        </p>
-                        {/* Seller Info */}
-                        <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                          <img
-                            src={seller?.avatar_url || "/avatar.svg"}
-                            alt="البائع"
-                            className="w-8 h-8 rounded-full object-cover bg-gray-100"
-                            onError={(e) => {
-                              e.target.src = "/avatar.svg";
-                            }}
-                          />
-                          <div>
-                            <div className="text-sm font-semibold text-gray-900">
-                              {seller?.full_name || "البائع"}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {formatDate(product.created_at)}
-                            </div>
-                          </div>
-                        </div>
-                        {/* Additional Info */}
-                        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {formatDate(product.created_at)}
-                          </span>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                            {product.category}
-                          </span>
-                        </div>
-                        {/* Comments Section */}
-                        <div id="comments-section">
-                          <Comments
-                            productId={productId}
-                            currentUser={currentUser}
-                            supabase={supabase}
-                            isOwner={isOwner}
-                          />
-                        </div>
-                      </div>
-                    </div>
+        {/* Desktop Layout */}
+        <div className="hidden md:block">
+          <div className="flex gap-6">
+            {/* Left Side - Main Product Card */}
+            <div className="w-1/2">
+              <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 sticky top-24">
+                {/* Image Container */}
+                <div className="relative group p-4">
+                  <div
+                    className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-4"
+                    style={{ aspectRatio: "4/3" }}
+                  >
+                    <img
+                      src={
+                        product.image_urls?.[0] || "/placeholder-image.jpg"
+                      }
+                      alt={product.title}
+                      className="max-w-full max-h-full object-contain"
+                      onError={handleImageError}
+                      loading="lazy"
+                    />
                   </div>
 
-                  {/* Right Side - Similar Products */}
-                  <div className="w-1/2">
-                    <div className="grid grid-cols-2 gap-4">
-                      {relatedProducts.slice(0, 6).map((relatedProduct) => (
-                        <div
-                          key={relatedProduct.id}
-                          className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
-                          onClick={() =>
-                            router.push(`/product/${relatedProduct.id}`)
-                          }
-                        >
-                          <div
-                            className="relative w-full bg-gray-100 flex items-center justify-center p-2"
-                            style={{ aspectRatio: "1/1" }}
-                          >
-                            <img
-                              src={
-                                relatedProduct.image_urls?.[0] ||
-                                "/placeholder-image.jpg"
-                              }
-                              alt={relatedProduct.title}
-                              className="max-w-full max-h-full object-contain"
-                              onError={handleImageError}
-                            />
-                          </div>
-                          <div className="p-3">
-                            <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
-                              {relatedProduct.title}
-                            </h3>
-                            <div className="text-sm font-bold text-green-600">
-                              {formatPrice(relatedProduct.price)}{" "}
-                              {relatedProduct.currency}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Bottom Cards - Masonry Layout */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {relatedProducts.slice(2).map((relatedProduct) => (
-                        <div
-                          key={relatedProduct.id}
-                          className="break-inside-avoid bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
-                          onClick={() =>
-                            router.push(`/product/${relatedProduct.id}`)
-                          }
-                        >
-                          <div className="relative group">
-                            <img
-                              src={
-                                relatedProduct.image_urls?.[0] ||
-                                "/placeholder-image.jpg"
-                              }
-                              alt={relatedProduct.title}
-                              className="w-full h-48 object-cover bg-gray-100"
-                              onError={handleImageError}
-                            />
-                          </div>
-                          <div className="p-3">
-                            <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
-                              {relatedProduct.title}
-                            </h3>
-                            <div className="text-sm font-bold text-green-600">
-                              {formatPrice(relatedProduct.price)}{" "}
-                              {relatedProduct.currency}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Layout */}
-              <div className="md:hidden">
-                {/* Main Product Card */}
-                <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 mb-6">
-                  {/* Image - تحديث للموبايل أيضاً */}
-                  <div className="relative p-3">
-                    <div className="relative w-full h-60 bg-gray-100 rounded-2xl flex items-center justify-center p-4">
-                      <img
-                        src={
-                          product.image_urls?.[0] || "/placeholder-image.jpg"
-                        }
-                        alt={product.title}
-                        className="max-w-full max-h-full object-contain"
-                        onError={handleImageError}
+                  {/* Action Buttons */}
+                  <div className="absolute top-6 right-6 flex flex-col gap-2">
+                    <button
+                      onClick={() =>
+                        document
+                          .getElementById("comments-section")
+                          ?.scrollIntoView({ behavior: "smooth" })
+                      }
+                      className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        backdropFilter: "blur(4px)",
+                      }}
+                    >
+                      <MessageCircle className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <button
+                      className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        backdropFilter: "blur(4px)",
+                      }}
+                    >
+                      <Share className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <button
+                      onClick={handleLike}
+                      disabled={likeLoading}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
+                        likeLoading ? "opacity-50" : ""
+                      }`}
+                      style={{
+                        backgroundColor: isLiked
+                          ? "rgba(239, 68, 68, 0.9)"
+                          : "rgba(255, 255, 255, 0.9)",
+                        backdropFilter: "blur(4px)",
+                      }}
+                    >
+                      <Heart
+                        className={`w-5 h-5 ${
+                          isLiked
+                            ? "text-white fill-current"
+                            : "text-gray-700"
+                        }`}
                       />
-                    </div>
+                    </button>
+                  </div>
 
-                    {/* Navigation Button */}
-                    {product.image_urls?.length > 1 && (
-                      <button className="absolute top-6 left-6 w-10 h-10 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-md">
+                  {/* Navigation Arrows */}
+                  {product.image_urls?.length > 1 && (
+                    <>
+                      <button
+                        className="absolute left-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          backgroundColor: "rgba(255, 255, 255, 0.8)",
+                        }}
+                      >
+                        <ArrowLeft className="w-5 h-5 text-gray-700" />
+                      </button>
+                      <button
+                        className="absolute right-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          backgroundColor: "rgba(255, 255, 255, 0.8)",
+                        }}
+                      >
                         <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
                       </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Product Info */}
+                <div className="p-6">
+                  {/* Contact Buttons */}
+                  <div className="contact-buttons flex gap-2 mb-4">
+                    {seller.phone && (
+                      <>
+                        <ContactButton type="whatsapp" value={seller.phone} />
+                        <ContactButton type="phone" value={seller.phone} />
+                        <ContactButton type="telegram" value={seller.phone} />
+                      </>
+                    )}
+                    {seller.email && (
+                      <ContactButton type="email" value={seller.email} />
                     )}
                   </div>
 
-                  {/* Mobile Action Buttons */}
-                  <div className="p-4 border-b border-gray-100">
-				                      <div className="flex items-center gap-2 mb-2">
-                      <img
-                        src={seller?.avatar_url || "/avatar.svg"}
-                        alt="البائع"
-                        className="w-8 h-8 rounded-full object-cover bg-gray-100"
-                      />
-                      <div>
-                        <div className="text-sm font-semibold text-gray-900">
-                          {seller?.full_name || "البائع"}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-3">
-                        <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
-                          <Share className="w-5 h-5 text-gray-600" />
-                        </button>
-                        <button
-                          onClick={() => setShowMobileComments(true)}
-                          className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300"
-                        >
-                          <MessageCircle className="w-5 h-5 text-gray-600" />
-                        </button>
+                  <h1 className="text-xl font-bold text-gray-900 mb-4">
+                    {product.title}
+                  </h1>
 
-                        <button
-                          onClick={handleLike}
-                          disabled={likeLoading}
-                          className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all ${
-                            isLiked
-                              ? "border-red-500 bg-red-50"
-                              : "border-gray-300"
-                          } ${likeLoading ? "opacity-50" : ""}`}
-                        >
-                          <Heart
-                            className={`w-5 h-5 ${
-                              isLiked
-                                ? "text-red-500 fill-current"
-                                : "text-gray-600"
-                            }`}
-                          />
-                          <span
-                            className={`text-sm ${
-                              isLiked ? "text-red-500" : "text-gray-600"
-                            }`}
-                          >
-                            {likesCount}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-4">
-				  					  {/* في بطاقة المنتج*/}
-                        <div className="contact-buttons flex gap-2">
-                          {seller.phone && (
-                            <>
-                              <ContactButton
-                                type="whatsapp"
-                                value={seller.phone}
-                              />
-                              <ContactButton
-                                type="phone"
-                                value={seller.phone}
-                              />
-                              <ContactButton
-                                type="telegram"
-                                value={seller.phone}
-                              />
-                            </>
-                          )}
-                          {seller.email && (
-                            <ContactButton type="email" value={seller.email} />
-                          )}
-                        </div>
-						 <hr className="my-4 border-gray-200" />
-
-
-                    <h1 className="text-xl font-bold text-gray-900 mb-3">
-                      {product.title}
-                    </h1>
-
-                    <div className="text-2xl font-bold text-green-600 mb-3">
+                  {/* Horizontal Info Layout */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-2xl font-bold text-green-600">
                       {formatPrice(product.price)} {product.currency}
                     </div>
-
-                    <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                      {product.description}
-                    </p>
-
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <MapPin className="w-4 h-4" />
                       <span>{product.location}</span>
                     </div>
                   </div>
-                </div>
 
-                {/* Related Products Grid */}
-                <div className="grid grid-cols-2 gap-2">
-                  {relatedProducts.slice(0, 4).map((relatedProduct) => (
-                    <div
-                      key={relatedProduct.id}
-                      className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"
-                      onClick={() =>
-                        router.push(`/product/${relatedProduct.id}`)
-                      }
-                    >
-                      <div
-                        className="relative w-full bg-gray-100 flex items-center justify-center p-2"
-                        style={{ aspectRatio: "1/1" }}
-                      >
-                        <img
-                          src={
-                            relatedProduct.image_urls?.[0] ||
-                            "/placeholder-image.jpg"
-                          }
-                          alt={relatedProduct.title}
-                          className="max-w-full max-h-full object-contain"
-                          onError={handleImageError}
-                          loading="lazy"
-                        />
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    {product.description}
+                  </p>
+
+                  {/* Seller Info */}
+                  <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                    <img
+                      src={seller?.avatar_url || "/avatar.svg"}
+                      alt="البائع"
+                      className="w-8 h-8 rounded-full object-cover bg-gray-100"
+                      onError={(e) => {
+                        e.target.src = "/avatar.svg";
+                      }}
+                    />
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {seller?.full_name || "البائع"}
                       </div>
-                      <div className="p-3">
-                        <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
-                          {relatedProduct.title}
-                        </h3>
-                        <div className="text-sm font-bold text-green-600">
-                          {formatPrice(relatedProduct.price)}{" "}
-                          {relatedProduct.currency}
-                        </div>
+                      <div className="text-xs text-gray-500">
+                        {formatDate(product.created_at)}
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Additional Info */}
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {formatDate(product.created_at)}
+                    </span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                      {product.category}
+                    </span>
+                  </div>
+
+                  {/* Comments Section */}
+                  <div id="comments-section">
+                    <Comments
+                      productId={productId}
+                      currentUser={currentUser}
+                      supabase={supabase}
+                      isOwner={isOwner}
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Mobile Comments Modal */}
-              {showMobileComments && (
-                <Comments
-                  productId={productId}
-                  currentUser={currentUser}
-                  supabase={supabase}
-                  isOwner={isOwner}
-                  showMobile={true}
-                  onClose={() => setShowMobileComments(false)}
+            {/* Right Side - Similar Products */}
+            <div className="w-1/2">
+              <div className="grid grid-cols-2 gap-4">
+                {relatedProducts.slice(0, 6).map((relatedProduct) => (
+                  <div
+                    key={relatedProduct.id}
+                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
+                    onClick={() =>
+                      router.push(`/product/${relatedProduct.id}`)
+                    }
+                  >
+                    <div
+                      className="relative w-full bg-gray-100 flex items-center justify-center p-2"
+                      style={{ aspectRatio: "1/1" }}
+                    >
+                      <img
+                        src={
+                          relatedProduct.image_urls?.[0] ||
+                          "/placeholder-image.jpg"
+                        }
+                        alt={relatedProduct.title}
+                        className="max-w-full max-h-full object-contain"
+                        onError={handleImageError}
+                      />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
+                        {relatedProduct.title}
+                      </h3>
+                      <div className="text-sm font-bold text-green-600">
+                        {formatPrice(relatedProduct.price)}{" "}
+                        {relatedProduct.currency}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="md:hidden">
+          {/* Main Product Card */}
+          <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 mb-6">
+            {/* Image */}
+            <div className="relative p-3">
+              <div className="relative w-full h-60 bg-gray-100 rounded-2xl flex items-center justify-center p-4">
+                <img
+                  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+                  alt={product.title}
+                  className="max-w-full max-h-full object-contain"
+                  onError={handleImageError}
                 />
+              </div>
+
+              {/* Navigation Button */}
+              {product.image_urls?.length > 1 && (
+                <button className="absolute top-6 left-6 w-10 h-10 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-md">
+                  <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
+                </button>
               )}
-            </>
-          )}
+            </div>
+
+            {/* Mobile Action Buttons */}
+            <div className="p-4 border-b border-gray-100">
+              <div className="flex items-center gap-2 mb-2">
+                <img
+                  src={seller?.avatar_url || "/avatar.svg"}
+                  alt="البائع"
+                  className="w-8 h-8 rounded-full object-cover bg-gray-100"
+                />
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    {seller?.full_name || "البائع"}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex gap-3">
+                  <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
+                    <Share className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => setShowMobileComments(true)}
+                    className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300"
+                  >
+                    <MessageCircle className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={handleLike}
+                    disabled={likeLoading}
+                    className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all ${
+                      isLiked
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
+                    } ${likeLoading ? "opacity-50" : ""}`}
+                  >
+                    <Heart
+                      className={`w-5 h-5 ${
+                        isLiked
+                          ? "text-red-500 fill-current"
+                          : "text-gray-600"
+                      }`}
+                    />
+                    <span
+                      className={`text-sm ${
+                        isLiked ? "text-red-500" : "text-gray-600"
+                      }`}
+                    >
+                      {likesCount}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Product Info */}
+            <div className="p-4">
+              {/* Contact Buttons */}
+              <div className="contact-buttons flex gap-2 mb-4">
+                {seller.phone && (
+                  <>
+                    <ContactButton type="whatsapp" value={seller.phone} />
+                    <ContactButton type="phone" value={seller.phone} />
+                    <ContactButton type="telegram" value={seller.phone} />
+                  </>
+                )}
+                {seller.email && (
+                  <ContactButton type="email" value={seller.email} />
+                )}
+              </div>
+              <hr className="my-4 border-gray-200" />
+
+              <h1 className="text-xl font-bold text-gray-900 mb-3">
+                {product.title}
+              </h1>
+
+              <div className="text-2xl font-bold text-green-600 mb-3">
+                {formatPrice(product.price)} {product.currency}
+              </div>
+
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                {product.description}
+              </p>
+
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <MapPin className="w-4 h-4" />
+                <span>{product.location}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Related Products Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            {relatedProducts.slice(0, 4).map((relatedProduct) => (
+              <div
+                key={relatedProduct.id}
+                className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"
+                onClick={() => router.push(`/product/${relatedProduct.id}`)}
+              >
+                <div
+                  className="relative w-full bg-gray-100 flex items-center justify-center p-2"
+                  style={{ aspectRatio: "1/1" }}
+                >
+                  <img
+                    src={
+                      relatedProduct.image_urls?.[0] ||
+                      "/placeholder-image.jpg"
+                    }
+                    alt={relatedProduct.title}
+                    className="max-w-full max-h-full object-contain"
+                    onError={handleImageError}
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-3">
+                  <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
+                    {relatedProduct.title}
+                  </h3>
+                  <div className="text-sm font-bold text-green-600">
+                    {formatPrice(relatedProduct.price)}{" "}
+                    {relatedProduct.currency}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Mobile Comments Modal */}
+        {showMobileComments && (
+          <Comments
+            productId={productId}
+            currentUser={currentUser}
+            supabase={supabase}
+            isOwner={isOwner}
+            showMobile={true}
+            onClose={() => setShowMobileComments(false)}
+          />
+        )}
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <div
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50"
-        style={{ height: "70px" }}
-      >
-        <div className="flex items-center justify-around h-full">
-          <button
-            onClick={() => router.push("/main")}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              pathname === "/main" ? "text-red-500" : "text-gray-600"
-            }`}
-          >
-            <Home className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={() => router.back()}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={() => router.push("/add-product")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-red-500"
-          >
-            <PlusCircle className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={() => router.push("/messages")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-600"
-          >
-            <MessageCircle className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={() => router.push("/dashboard")}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              pathname === "/dashboard" ? "text-red-500" : "text-gray-600"
-            }`}
-          >
-            <User className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Bottom Spacing */}
-      <div className="md:hidden h-20"></div>
-    </div>
+    </AppLayout>
   );
 }
