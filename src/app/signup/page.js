@@ -294,7 +294,6 @@ export default function SignUp() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
         {/* رأس الصفحة */}
         <div className="text-center mb-8">
-          <div className="text-4xl mb-4">🛍️</div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">انضم إلينا</h1>
           <p className="text-gray-600">أنشئ حساب جديد وابدأ التسوق</p>
         </div>

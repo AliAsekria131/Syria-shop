@@ -251,19 +251,18 @@ export default function Dashboard() {
       )}
 
       <div className="p-4 md:p-6 max-w-6xl mx-auto">
-	  
-	  {/* Mobile Top Bar - يظهر فقط على شاشات الهاتف */}
-<div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 mb-4">
-  <div className="flex items-center justify-between">
-    <h1 className="text-lg font-bold text-gray-900">لوحة التحكم</h1>
-    <button
-      onClick={() => router.push("/settings")}
-      className=" text-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
-    >
-      <Settings className="w-6 h-6 text-black" />
-    </button>
-  </div>
-</div>
+        {/* Mobile Top Bar - يظهر فقط على شاشات الهاتف */}
+        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 mb-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg font-bold text-gray-900">لوحة التحكم</h1>
+            <button
+              onClick={() => router.push("/settings")}
+              className=" text-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+            >
+              <Settings className="w-6 h-6 text-black" />
+            </button>
+          </div>
+        </div>
 
         {/* User Info Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-200">
@@ -292,7 +291,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-		
         </div>
 
         {/* Profile Completion Alert */}
@@ -344,9 +342,7 @@ export default function Dashboard() {
                 />
               </svg>
             </div>
-            <p className="text-2xl font-bold text-green-600">
-              {stats.active}
-            </p>
+            <p className="text-2xl font-bold text-green-600">{stats.active}</p>
             <p className="text-sm text-gray-600">منتجات نشطة</p>
           </div>
 
@@ -354,9 +350,7 @@ export default function Dashboard() {
             <div className="w-8 h-8 rounded-lg mx-auto mb-2 bg-purple-100 flex items-center justify-center">
               <Eye className="w-5 h-5 text-purple-600" />
             </div>
-            <p className="text-2xl font-bold text-purple-600">
-              {stats.views}
-            </p>
+            <p className="text-2xl font-bold text-purple-600">{stats.views}</p>
             <p className="text-sm text-gray-600">المشاهدات</p>
           </div>
         </div>
@@ -374,29 +368,7 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              {/* View Mode Toggle */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-white shadow-sm text-red-500"
-                      : "text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "list"
-                      ? "bg-white shadow-sm text-red-500"
-                      : "text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
+
             </div>
           </div>
 
@@ -450,6 +422,7 @@ export default function Dashboard() {
                               loading="lazy"
                             />
                           </div>
+
                           <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
                             {product.category}
                           </div>

@@ -137,9 +137,6 @@ export default function Login() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
         {/* رأس الصفحة */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-4">
-            <div className="text-4xl">🛍️</div>
-          </Link>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             مرحباً بك مجدداً
           </h1>

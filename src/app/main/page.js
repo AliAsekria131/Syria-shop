@@ -46,7 +46,7 @@ export default function MainPage() {
         let query = supabase
           .from("ads")
           .select("*")
-          .in("status", ["active", "expired"])
+          .in("status", ["active"])
           .order("created_at", { ascending: false });
 
         // تطبيق الفلاتر
@@ -193,9 +193,7 @@ export default function MainPage() {
                     style={{ aspectRatio: "1/1" }}
                   >
                     <img
-                      src={
-                        product.image_urls?.[0] || "/placeholder-image.jpg"
-                      }
+                      src={product.image_urls?.[0] || "/placeholder-image.jpg"}
                       alt={product.title}
                       className="max-w-full max-h-full object-contain rounded-xl"
                       onError={handleImageError}
