@@ -27,9 +27,8 @@ export default function MainPage() {
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
 
-  useEffect(() => {
     useExpiredAdsChecker();
-  }, []);
+
 
   // دالة جلب البيانات مع الفلاتر
   const fetchAds = useCallback(

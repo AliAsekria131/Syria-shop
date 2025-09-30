@@ -13,6 +13,21 @@ import {
 // مكون تعديل المنتج - محسن
 // الحل: وحّد الاسماء
 export default function EditProductForm({ product, onClose, onProductUpdated, supabase }) {
+	
+	  useEffect(() => {
+  // منع التمرير في الخلفية عند فتح النافذة
+  document.body.style.overflow = 'hidden';
+  
+  return () => {
+    document.body.style.overflow = 'auto';
+  };
+}, []);
+
+  if (!product) {
+    return <div>خطأ في تحميل بيانات المنتج</div>;
+  }
+  
+
   const syrianGovernorates = [
     "دمشق", "ريف دمشق", "حلب", "حمص", "حماة", "إدلب",
     "اللاذقية", "طرطوس", "درعا", "السويداء", "القنيطرة",
@@ -136,18 +151,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
     }
   };
 
-  if (!product) {
-    return <div>خطأ في تحميل بيانات المنتج</div>;
-  }
-  
-  useEffect(() => {
-  // منع التمرير في الخلفية عند فتح النافذة
-  document.body.style.overflow = 'hidden';
-  
-  return () => {
-    document.body.style.overflow = 'auto';
-  };
-}, []);
+
 
 
     return (
