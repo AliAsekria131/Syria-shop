@@ -78,8 +78,7 @@ export default function AppLayout({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحقق من المصادقة...</p>
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" ></div>
         </div>
       </div>
     );
@@ -213,7 +212,7 @@ export default function AppLayout({ children }) {
               </form>
 
               {/* User Menu */}
-              <div className="flex relative user-menu-container">
+              <div className="flex relative user-menu-container gap-1">
                 <button
                   onClick={() => {
                     router.push("/dashboard");
@@ -236,7 +235,7 @@ export default function AppLayout({ children }) {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
+                  <div className="absolute left-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
                     <button
                       onClick={() => {
                         router.push("/dashboard");
@@ -260,7 +259,9 @@ export default function AppLayout({ children }) {
                     </button>
                   </div>
                 )}
+				
               </div>
+			  
             </div>
           </div>
         </div>
@@ -278,8 +279,11 @@ export default function AppLayout({ children }) {
           <button
             onClick={() => router.push("/main")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/main") ? "text-red-500" : "text-gray-600"
+              isActive("/main") ? "" : "text-gray-600"
             }`}
+            style={
+              isActive("/main") ? { color: "white", background: "#3f47cc" } : {}
+            }
           >
             <Home className="w-5 h-5" />
           </button>
@@ -287,8 +291,13 @@ export default function AppLayout({ children }) {
           <button
             onClick={() => router.push("/search")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/search") ? "text-red-500" : "text-gray-600"
+              isActive("/search") ? "" : "text-gray-600"
             }`}
+            style={
+              isActive("/search")
+                ? { color: "white", background: "#3f47cc" }
+                : {}
+            }
           >
             <Search className="w-5 h-5" />
           </button>
@@ -296,8 +305,13 @@ export default function AppLayout({ children }) {
           <button
             onClick={() => router.push("/add-product")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg ${
-              isActive("/add-product") ? "text-red-500" : "text-gray-600"
+              isActive("/add-product") ? "" : "text-gray-600"
             }`}
+            style={
+              isActive("/add-product")
+                ? { color: "white", background: "#3f47cc" }
+                : {}
+            }
           >
             <PlusCircle className="w-5 h-5" />
           </button>
@@ -305,17 +319,27 @@ export default function AppLayout({ children }) {
           <button
             onClick={() => router.push("/favorites")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/favorites") ? "text-red-500" : "text-gray-600"
+              isActive("/favorites") ? "" : "text-gray-600"
             }`}
+            style={
+              isActive("/favorites")
+                ? { color: "white", background: "#3f47cc" }
+                : {}
+            }
           >
-            <Heart className="w-5 h-5 fill-current" />
+            <Heart className="w-5 h-5" />
           </button>
 
           <button
             onClick={() => router.push("/dashboard")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/dashboard") ? "text-red-500" : "text-gray-600"
+              isActive("/dashboard") ? "" : "text-gray-600"
             }`}
+            style={
+              isActive("/dashboard")
+                ? { color: "white", background: "#3f47cc", border: "1px solid #3f47cc" }
+                : {}
+            }
           >
             <User className="w-5 h-5" />
           </button>

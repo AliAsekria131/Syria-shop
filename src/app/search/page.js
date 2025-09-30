@@ -261,8 +261,7 @@ export default function SearchComponent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحقق من المصادقة...</p>
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         </div>
       </div>
     );
@@ -276,16 +275,20 @@ export default function SearchComponent() {
           {/* Logo */}
           <button
             onClick={() => router.push("/main")}
-            className="mb-8 p-3 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors"
+            className="mb-8 text-white transition-colors"
           >
-            <Home className="w-6 h-6" />
+            <img
+              src="/logo (6).jpeg"
+              alt="شعار الموقع"
+              className="w-11 h-11 rounded-xl object-cover"
+            />
           </button>
 
           {/* Navigation Icons */}
           <div className="flex flex-col gap-4 mb-auto">
             <button
               onClick={() => router.push("/main")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-3 rounded-xl transition-colors text-gray-600 hover:bg-gray-50"
               title="الصفحة الرئيسية"
             >
               <Home className="w-6 h-6" />
@@ -293,11 +296,7 @@ export default function SearchComponent() {
 
             <button
               onClick={() => router.push("/search")}
-              className={`p-3 rounded-xl transition-colors ${
-                pathname === "/search"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className="p-3 rounded-xl transition-colors bg-gray-100 text-black"
               title="البحث"
             >
               <Search className="w-6 h-6" />
@@ -305,16 +304,15 @@ export default function SearchComponent() {
 
             <button
               onClick={() => router.push("/add-product")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-3 rounded-xl transition-colorstext-gray-600 hover:bg-gray-50"
               title="إضافة منتج"
             >
               <Plus className="w-6 h-6" />
             </button>
 
-            {/* زر المفضلة الجديد مع تمييز حسب المسار */}
             <button
               onClick={() => router.push("/favorites")}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-3 rounded-xl transition-colors text-gray-600 hover:bg-gray-50"
               title="المفضلة"
             >
               <Heart className="w-6 h-6" />
@@ -376,7 +374,7 @@ export default function SearchComponent() {
                   placeholder="ابحث في المنتجات..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 pl-12 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-full border-2 border-gray-200 hover:border-red-300 focus:border-red-500 focus:outline-none"
+                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-2xl border-2 border-gray-200 focus:outline-none"
                   autoFocus
                 />
                 {searchLoading && (
@@ -386,11 +384,12 @@ export default function SearchComponent() {
                 )}
               </form>
 
-              {/* User Menu */}
-              <div className="relative user-menu-container">
+			{/* User Menu */}
+              <div className="flex relative user-menu-container gap-1">
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  onClick={() => {
+                    router.push("/dashboard");
+                  }}
                 >
                   <img
                     src={user.avatar_url || "/avatar.svg"}
@@ -400,11 +399,16 @@ export default function SearchComponent() {
                       e.target.src = "/avatar.svg";
                     }}
                   />
+                </button>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 p-2 rounded-2xl hover:bg-gray-100 transition-colors"
+                >
                   <ChevronDown className="w-4 h-4 text-gray-600" />
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
+                  <div className="absolute left-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
                     <button
                       onClick={() => {
                         router.push("/dashboard");
@@ -428,7 +432,9 @@ export default function SearchComponent() {
                     </button>
                   </div>
                 )}
+				
               </div>
+			  
             </div>
           </div>
 
@@ -488,8 +494,7 @@ export default function SearchComponent() {
         {/* Mobile Header */}
         <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200">
           <div className="px-4 py-4">
-            <h1 className="text-xl font-bold text-gray-900 mb-4">البحث</h1>
-
+			<div >
             {/* Mobile Search Form */}
             <form onSubmit={handleSearch} className="mb-4">
               <div className="relative">
@@ -499,12 +504,12 @@ export default function SearchComponent() {
                   placeholder="ابحث في المنتجات..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 pl-12 py-4 rounded-full border-2 border-gray-200 focus:border-red-500 focus:outline-none text-lg"
+                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-2xl border-2 border-gray-200 focus:outline-none"
                   autoFocus
                 />
                 {searchLoading && (
                   <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                    <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
               </div>
@@ -516,12 +521,11 @@ export default function SearchComponent() {
                 onClick={() => setShowDesktopFilters(!showDesktopFilters)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
                   showDesktopFilters
-                    ? "bg-red-500 text-white"
+                    ? "bg-blue-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 <Filter className="w-4 h-4" />
-                <span>الفلاتر</span>
               </button>
 
               {hasActiveFilters() && (
@@ -533,7 +537,7 @@ export default function SearchComponent() {
                 </button>
               )}
             </div>
-
+			</div>
             {/* Mobile Filters Panel */}
             {showDesktopFilters && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -709,16 +713,15 @@ export default function SearchComponent() {
 
           <button
             onClick={() => router.push("/search")}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              pathname === "/search" ? "text-red-500" : "text-gray-600"
-            }`}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors"
+			style={{ color: "white", background: "#3f47cc" }}
           >
             <Search className="w-5 h-5" />
           </button>
 
           <button
             onClick={() => router.push("/add-product")}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-red-500"
+            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-500"
           >
             <PlusCircle className="w-5 h-5" />
           </button>
@@ -727,7 +730,7 @@ export default function SearchComponent() {
             onClick={() => router.push("/favorites")}
             className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-gray-600"
           >
-            <Heart className="w-5 h-5 fill-current" />
+            <Heart className="w-5 h-5" />
           </button>
 
           <button

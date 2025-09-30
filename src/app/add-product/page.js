@@ -188,7 +188,7 @@ export default function AddProductPage() {
 
   return (
     <AppLayout>
-      {/* Mobile Header */}
+      {/* Mobile Header 
       <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <button
@@ -200,7 +200,7 @@ export default function AddProductPage() {
           <h1 className="text-xl font-bold">إنشاء منشور</h1>
           <div className="w-10"></div>
         </div>
-      </div>
+      </div>*/}
 
       {/* Form Content */}
       <div className="max-w-4xl mx-auto p-4 md:p-6">

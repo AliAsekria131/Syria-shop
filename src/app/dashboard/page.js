@@ -16,6 +16,7 @@ import {
   Plus,
   Grid,
   List,
+  Settings,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -228,7 +229,6 @@ export default function Dashboard() {
           <div className="flex items-center justify-center pt-20">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">جاري التحقق من المصادقة...</p>
             </div>
           </div>
         </div>
@@ -251,10 +251,19 @@ export default function Dashboard() {
       )}
 
       <div className="p-4 md:p-6 max-w-6xl mx-auto">
-        {/* Mobile Title */}
-        <div className="md:hidden mb-6">
-          <h1 className="text-xl font-bold text-center">لوحة التحكم</h1>
-        </div>
+	  
+	  {/* Mobile Top Bar - يظهر فقط على شاشات الهاتف */}
+<div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 mb-4">
+  <div className="flex items-center justify-between">
+    <h1 className="text-lg font-bold text-gray-900">لوحة التحكم</h1>
+    <button
+      onClick={() => router.push("/settings")}
+      className=" text-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+    >
+      <Settings className="w-6 h-6 text-black" />
+    </button>
+  </div>
+</div>
 
         {/* User Info Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-200">
@@ -262,7 +271,7 @@ export default function Dashboard() {
             <img
               src={user.avatar_url || "/avatar.svg"}
               alt="صورة المستخدم"
-              className="w-16 h-16 rounded-full border-2 border-red-500 object-cover"
+              className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover"
               onError={(e) => {
                 e.target.src = "/avatar.svg";
               }}
@@ -283,6 +292,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+		
         </div>
 
         {/* Profile Completion Alert */}

@@ -162,7 +162,7 @@ export default function MainPage() {
       <div className="p-4 md:p-6">
         {loading ? (
           <div className="text-center py-20">
-            <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">جاري تحميل المنتجات...</p>
           </div>
         ) : ads.length === 0 ? (

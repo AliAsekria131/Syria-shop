@@ -141,7 +141,7 @@ export default function FavoritesPage() {
   return (
     <AppLayout>
       <div className="p-4 md:p-6">
-        {/* Mobile Title */}
+        {/* Mobile Title 
         <div className="md:hidden mb-6">
           <div className="flex items-center gap-3 mb-4">
             <button
@@ -152,7 +152,7 @@ export default function FavoritesPage() {
             </button>
             <h1 className="text-xl font-bold text-gray-900">المُفضلة</h1>
           </div>
-        </div>
+        </div>*/}
 
         {/* Error State */}
         {error && (

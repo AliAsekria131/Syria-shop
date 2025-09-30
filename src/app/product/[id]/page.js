@@ -378,7 +378,7 @@ export default function ProductDetailsPage() {
       <AppLayout>
         <div className="flex items-center justify-center pt-20">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 border-red-500"></div>
+            <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 border-blue-500"></div>
             <p className="text-gray-600">جاري تحميل تفاصيل المنتج...</p>
           </div>
         </div>

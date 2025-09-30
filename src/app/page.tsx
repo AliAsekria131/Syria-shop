@@ -1,23 +1,58 @@
+// صفحة الاستقبال الرئيسية - محسّنة أمنياً
 "use client";
 
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
 export default function HomePage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProducts: 0,
-    totalUsers: 0
   });
+  const [currentSection, setCurrentSection] = useState(0);
 
-  // التحقق من المصادقة وإعادة التوجيه
+  const sections = [
+    {
+      id: 1,
+      emoji: "",
+      title: "اكتشف عالم التسوق الذكي",
+      description: "تصفح آلاف المنتجات من البائعين المحليين في مكان واحد",
+      gradient: "from-blue-500 to-purple-600",
+      image: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&auto=format&fit=crop"
+    },
+    {
+      id: 2,
+      emoji: "",
+      title: "ابدأ البيع واربح",
+      description: "أضف منتجاتك وابدأ بالربح من خلال منصتنا الآمنة",
+      gradient: "from-green-500 to-teal-600",
+      image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&auto=format&fit=crop"
+    },
+    {
+      id: 3,
+      emoji: "",
+      title: "معاملات آمنة وموثوقة",
+      description: "تسوق بثقة مع نظام الحماية والتشفير الكامل",
+      gradient: "from-orange-500 to-red-600",
+      image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&auto=format&fit=crop"
+    }
+  ];
+
+  // التحقق من المصادقة وإعادة التوجيه - محسّن أمنياً
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
+        // تجنب redirect loops
+        if (pathname !== '/') {
+          setLoading(false);
+          return;
+        }
+
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (user && !error) {
@@ -41,68 +76,117 @@ export default function HomePage() {
     // مراقبة تغييرات المصادقة
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
+        if (event === 'SIGNED_IN' && session?.user && pathname === '/') {
           router.push('/main');
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase, router]);
+  }, [supabase, router, pathname]);
 
-  // جلب الإحصائيات العامة
+  // جلب الإحصائيات العامة - محسّن أمنياً
   const fetchStats = async () => {
     try {
-      // جلب عدد المنتجات
-      const { data: productsData, error: productsError } = await supabase
+      // جلب عدد المنتجات فقط (count) دون جلب البيانات الفعلية
+      // يجب التأكد من أن RLS مفعّل على جدول ads
+      const { count, error } = await supabase
         .from("ads")
-        .select("id", { count: 'exact' })
+        .select("*", { count: 'exact', head: true })
         .eq("status", "active");
 
-      if (!productsError) {
-        setStats(prev => ({ ...prev, totalProducts: productsData?.length || 0 }));
+      if (error) {
+        console.error("Error fetching stats:", error);
+        // لا نعرض رسالة خطأ للمستخدم لتجنب كشف معلومات النظام
+        return;
       }
 
-      // يمكن إضافة المزيد من الإحصائيات هنا
+      // تحديد حد أقصى لعرض الإحصائيات (لتجنب كشف معلومات دقيقة عن النظام)
+      const displayCount = count ? Math.min(count, 9999) : 0;
+      setStats(prev => ({ ...prev, totalProducts: displayCount }));
       
     } catch (error) {
       console.error("Error fetching stats:", error);
+      // لا نعرض رسالة خطأ للمستخدم
+    }
+  };
+
+  // نظام التمرير بين الصفحات
+  useEffect(() => {
+    const handleWheel = (e) => {
+      e.preventDefault();
+      
+      if (e.deltaY > 50 && currentSection < sections.length - 1) {
+        setCurrentSection(prev => prev + 1);
+      } else if (e.deltaY < -50 && currentSection > 0) {
+        setCurrentSection(prev => prev - 1);
+      }
+    };
+
+    let touchStartY = 0;
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const diff = touchStartY - touchEndY;
+      
+      if (diff > 50 && currentSection < sections.length - 1) {
+        setCurrentSection(prev => prev + 1);
+      } else if (diff < -50 && currentSection > 0) {
+        setCurrentSection(prev => prev - 1);
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
+    
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [currentSection, sections.length]);
+
+  const scrollToNext = () => {
+    if (currentSection < sections.length - 1) {
+      setCurrentSection(prev => prev + 1);
     }
   };
 
   // عرض شاشة التحميل أثناء التحقق من المصادقة
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">🛍️</div>
-          <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحميل...</p>
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100">
-      {/* شريط تنقل بسيط */}
-      <nav className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">🛍️</span>
-              <span className="text-xl font-bold text-gray-800">متجر سوريا</span>
+    <div className="relative h-screen w-full overflow-hidden bg-gray-900">
+      {/* شريط التنقل الثابت - يظهر فقط في الشاشات الكبيرة */}
+      <nav className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-lg border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🛍️</span>
+              <span className="text-2xl font-bold text-white">متجر سوريا</span>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <Link
                 href="/login"
-                className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 transition-colors"
+                className="text-white hover:text-blue-300 font-medium px-6 py-2.5 transition-colors text-lg whitespace-nowrap"
               >
                 تسجيل الدخول
               </Link>
               <Link
                 href="/signup"
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/50 transition-all font-medium text-lg whitespace-nowrap"
               >
                 إنشاء حساب
               </Link>
@@ -111,204 +195,120 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* القسم الرئيسي الترحيبي */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          {/* العنوان الرئيسي */}
-          <div className="mb-8">
-            <div className="text-8xl mb-6 animate-pulse">🛍️</div>
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-800 mb-6 leading-tight">
-              مرحباً بك في
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                متجر سوريا
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              المنصة الأولى للتسوق الإلكتروني في سوريا
-              <br />
-              اكتشف أفضل المنتجات أو ابدأ ببيع منتجاتك الآن
-            </p>
-          </div>
-
-          {/* الإحصائيات */}
-          {stats.totalProducts > 0 && (
-            <div className="mb-12">
-              <div className="inline-flex items-center gap-8 bg-white/60 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-lg">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-1">
-                    {stats.totalProducts}+
-                  </div>
-                  <div className="text-gray-600 text-sm">منتج متاح</div>
-                </div>
-                <div className="w-px h-12 bg-gray-300"></div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-1">
-                    24/7
-                  </div>
-                  <div className="text-gray-600 text-sm">خدمة مستمرة</div>
-                </div>
-                <div className="w-px h-12 bg-gray-300"></div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-1">
-                    100%
-                  </div>
-                  <div className="text-gray-600 text-sm">آمن وموثوق</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* أزرار الإجراء الرئيسية */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-            <Link
-              href="/signup"
-              className="group bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl group-hover:scale-110 transition-transform">🚀</span>
-                <span>ابدأ رحلتك معنا</span>
-              </div>
-            </Link>
-            <Link
-              href="/login"
-              className="group bg-white/80 backdrop-blur-sm text-gray-800 px-8 py-4 rounded-2xl font-bold text-lg border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl group-hover:scale-110 transition-transform">👋</span>
-                <span>لديك حساب مسبقاً؟</span>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* قسم الميزات */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12">
-            لماذا تختار متجر سوريا؟
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* ميزة 1 */}
-            <div className="group bg-white/60 backdrop-blur-sm rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">🛒</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">تسوق سهل وسريع</h3>
-              <p className="text-gray-600 leading-relaxed">
-                تصفح آلاف المنتجات من مختلف الفئات واشتري بضغطة زر واحدة
-              </p>
-            </div>
-
-            {/* ميزة 2 */}
-            <div className="group bg-white/60 backdrop-blur-sm rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">💰</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">ابدأ البيع الآن</h3>
-              <p className="text-gray-600 leading-relaxed">
-                أضف منتجاتك واربح المال من خلال بيعها لآلاف المشترين
-              </p>
-            </div>
-
-            {/* ميزة 3 */}
-            <div className="group bg-white/60 backdrop-blur-sm rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">🔒</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">آمن وموثوق</h3>
-              <p className="text-gray-600 leading-relaxed">
-                معاملات آمنة ومشفرة مع حماية كاملة لبياناتك الشخصية
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* قسم الدعوة للانضمام */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-3xl p-12 border border-white/20">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-              هل أنت جاهز للبدء؟
-            </h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              انضم إلى آلاف المستخدمين الذين يثقون بمتجر سوريا
-              <br />
-              سواء كنت مشتري أو بائع، لدينا كل ما تحتاجه
-            </p>
+      {/* الصفحات */}
+      <div 
+        className="h-full transition-transform duration-1000 ease-in-out"
+        style={{ 
+          transform: `translateY(-${currentSection * 100}vh)`,
+        }}
+      >
+        {sections.map((section, index) => (
+          <section 
+            key={section.id}
+            className="h-screen w-full flex items-center justify-center relative"
+          >
+            {/* الخلفية المتدرجة */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${section.gradient} opacity-40`}></div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/signup"
-                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-3 rounded-xl font-bold text-lg hover:shadow-lg transition-all transform hover:-translate-y-0.5"
-              >
-                🎯 إنشاء حساب مجاني
-              </Link>
-              <Link
-                href="/login"
-                className="bg-white/80 backdrop-blur-sm text-gray-800 px-8 py-3 rounded-xl font-bold text-lg border border-gray-300 hover:border-gray-400 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
-              >
-                🔑 تسجيل الدخول
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+            {/* صورة الخلفية */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-60"
+              style={{ backgroundImage: `url(${section.image})` }}
+            ></div>
 
-      {/* الفوتر */}
-      <footer className="bg-white/40 backdrop-blur-sm border-t border-white/20 py-8 px-4 mt-16">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <span className="text-2xl">🛍️</span>
-                <span className="text-xl font-bold text-gray-800">متجر سوريا</span>
-              </div>
-              <p className="text-gray-600 leading-relaxed">
-                المنصة الأولى للتسوق الإلكتروني في سوريا. نربط البائعين بالمشترين 
-                في بيئة آمنة وموثوقة.
-              </p>
-            </div>
+            {/* المحتوى */}
+            <div className="relative z-10 max-w-5xl mx-auto px-8 text-center">
+              <div 
+                className="transform transition-all duration-1000 delay-200"
+                style={{
+                  opacity: currentSection === index ? 1 : 0,
+                  transform: currentSection === index ? 'translateY(0)' : 'translateY(30px)'
+                }}
+              >
+                <div className="text-8xl mb-8 animate-bounce-slow">
+                  {section.emoji}
+                </div>
+                <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-2xl">
+                  {section.title}
+                </h1>
+                <p className="text-1xl md:text-3xl text-white/90 mb-12 drop-shadow-lg max-w-3xl mx-auto leading-relaxed">
+                  {section.description}
+                </p>
 
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-4">روابط سريعة</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/signup" className="text-gray-600 hover:text-blue-600 transition-colors">
-                    إنشاء حساب
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login" className="text-gray-600 hover:text-blue-600 transition-colors">
+                {/* الأزرار - تظهر فقط في شاشات الهاتف */}
+                <div className="md:hidden flex flex-col gap-4 w-full max-w-xs mx-auto">
+                  <Link
+                    href="/login"
+                    className="bg-white text-gray-900 px-8 py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-white/30 transition-all duration-300 transform hover:scale-105 w-full text-center"
+                  >
                     تسجيل الدخول
                   </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-4">تواصل معنا</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <span>📧</span>
-                  <span className="text-sm">support@syria-shop.com</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <span>📞</span>
-                  <span className="text-sm">+963 XXX XXX XXX</span>
-                </div>
-                <div className="flex gap-3 mt-4">
-                  <a href="#" className="text-2xl hover:scale-110 transition-transform">📘</a>
-                  <a href="#" className="text-2xl hover:scale-110 transition-transform">📸</a>
-                  <a href="#" className="text-2xl hover:scale-110 transition-transform">🐦</a>
+                  <Link
+                    href="/signup"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105 w-full text-center"
+                  >
+                    إنشاء حساب
+                  </Link>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="border-t border-gray-200 mt-8 pt-8 text-center">
-            <p className="text-gray-500">
-              © 2025 متجر سوريا. جميع الحقوق محفوظة.
-            </p>
-          </div>
+            {/* سهم للأسفل */}
+            {index < sections.length - 1 && (
+              <button
+                onClick={scrollToNext}
+                className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/70 hover:text-white transition-all animate-bounce"
+                aria-label="التالي"
+              >
+                <svg 
+                  className="w-12 h-12" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M19 9l-7 7-7-7" 
+                  />
+                </svg>
+              </button>
+            )}
+
+            {/* رقم الصفحة */}
+            <div className="absolute bottom-8 right-8 text-white/50 text-lg font-medium">
+              {index + 1} / {sections.length}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      {/* Footer ثابت في الأسفل */}
+      {currentSection === sections.length - 1 && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-md text-white py-4 text-center transition-opacity duration-500"
+          style={{
+            opacity: currentSection === sections.length - 1 ? 1 : 0
+          }}
+        >
+          <p className="text-sm">© 2025 متجر سوريا. جميع الحقوق محفوظة.</p>
         </div>
-      </footer>
+      )}
+
+      <style jsx>{`
+        @keyframes bounce-slow {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
