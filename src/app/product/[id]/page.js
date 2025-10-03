@@ -1,9 +1,10 @@
 // product/[id]/page.js
 "use client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from '../../../../lib/supabase';
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import {
   ArrowLeft,
   MapPin,
@@ -15,9 +16,9 @@ import {
 
 import Comments from "../../components/Comments";
 import ContactButton from '../../components/ContactButton';
-import RemainingTime from "../../components/RemainingTime";
+
 import AppLayout from "../../components/AppLayout";
-import { renewAd } from "../../../utils/renewAd";
+
 import {
   addLike,
   removeLike,
@@ -26,7 +27,7 @@ import {
 } from "../../../utils/likes";
 
 export default function ProductDetailsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const router = useRouter();
   const params = useParams();
   const productId = params.id;
@@ -37,12 +38,12 @@ export default function ProductDetailsPage() {
   const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   const [isOwner, setIsOwner] = useState(false);
-  const [showContactInfo, setShowContactInfo] = useState(false);
-  const [averageRating, setAverageRating] = useState(0);
-  const [totalComments, setTotalComments] = useState(0);
-  const [renewLoading, setRenewLoading] = useState(false);
+
+
+
+
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showMobileComments, setShowMobileComments] = useState(false);
 
@@ -51,15 +52,7 @@ export default function ProductDetailsPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
 
-  // التحقق من صحة رابط الصورة
-  const isValidImageUrl = (url) => {
-    if (!url) return false;
-    if (url.includes("placeholder-image.jpg")) return true;
-    const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-    return validExtensions.some((ext) => url.toLowerCase().includes(ext));
-  };
 
-  // التحقق من المصادقة وجلب المستخدم الحالي
   useEffect(() => {
     const checkAuth = async () => {
       const {
@@ -232,30 +225,6 @@ export default function ProductDetailsPage() {
     }
   }, [currentUser, productId, product]);
 
-  // دالة تجديد الإعلان
-  const handleRenewAd = async () => {
-    if (!confirm("هل تريد تجديد هذا الإعلان لـ 7 أيام إضافية؟")) {
-      return;
-    }
-
-    try {
-      setRenewLoading(true);
-      const result = await renewAd(productId);
-
-      if (result.success) {
-        alert("✅ تم تجديد الإعلان بنجاح!");
-        window.location.reload();
-      } else {
-        alert("❌ " + result.message);
-      }
-    } catch (error) {
-      console.error("خطأ في تجديد الإعلان:", error);
-      alert("❌ حدث خطأ في تجديد الإعلان");
-    } finally {
-      setRenewLoading(false);
-    }
-  };
-
   // دالة التعامل مع الإعجاب
   const handleLike = async () => {
     if (!currentUser) {
@@ -321,55 +290,6 @@ export default function ProductDetailsPage() {
     e.target.style.backgroundColor = "#f3f4f6";
     e.target.src = "/placeholder-image.jpg";
     e.target.alt = "صورة غير متاحة";
-  };
-
-  // دوال التنقل بين الصور
-  const goToImage = (index) => {
-    setCurrentImageIndex(index);
-  };
-
-  const goToPreviousImage = () => {
-    if (product?.image_urls?.length > 1) {
-      setCurrentImageIndex((prev) =>
-        prev === 0 ? product.image_urls.length - 1 : prev - 1
-      );
-    }
-  };
-
-  const goToNextImage = () => {
-    if (product?.image_urls?.length > 1) {
-      setCurrentImageIndex((prev) =>
-        prev === product.image_urls.length - 1 ? 0 : prev + 1
-      );
-    }
-  };
-
-  // دوال النسخ والفتح
-  const copyToClipboard = (text, type) => {
-    navigator.clipboard.writeText(text).then(() => {
-      alert(`تم نسخ ${type} بنجاح!`);
-    });
-  };
-
-  const openExternalApp = (type, value) => {
-    let url = "";
-    switch (type) {
-      case "whatsapp":
-        url = `https://wa.me/963${value.replace(/\D/g, "")}`;
-        break;
-      case "telegram":
-        url = `https://t.me/+963${value.replace(/\D/g, "")}`;
-        break;
-      case "phone":
-        url = `tel:${value}`;
-        break;
-      case "email":
-        url = `mailto:${value}`;
-        break;
-      default:
-        return;
-    }
-    window.open(url, "_blank");
   };
 
   // شاشة التحميل
@@ -449,15 +369,14 @@ export default function ProductDetailsPage() {
                     className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-4"
                     style={{ aspectRatio: "4/3" }}
                   >
-                    <img
-                      src={
-                        product.image_urls?.[0] || "/placeholder-image.jpg"
-                      }
-                      alt={product.title}
-                      className="max-w-full max-h-full object-contain"
-                      onError={handleImageError}
-                      loading="lazy"
-                    />
+<Image
+  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+  alt={product.title}
+  fill
+  className="object-contain"
+  onError={handleImageError}
+  sizes="(max-width: 768px) 100vw, 50vw"
+/>
                   </div>
 
                   {/* Action Buttons */}
@@ -569,14 +488,14 @@ export default function ProductDetailsPage() {
 
                   {/* Seller Info */}
                   <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                    <img
-                      src={seller?.avatar_url || "/avatar.svg"}
-                      alt="البائع"
-                      className="w-8 h-8 rounded-full object-cover bg-gray-100"
-                      onError={(e) => {
-                        e.target.src = "/avatar.svg";
-                      }}
-                    />
+<Image
+  src={seller?.avatar_url || "/avatar.svg"}
+  alt="البائع"
+  width={32}
+  height={32}
+  className="rounded-full object-cover bg-gray-100"
+  onError={(e) => { e.target.src = "/avatar.svg"; }}
+/>
                     <div>
                       <div className="text-sm font-semibold text-gray-900">
                         {seller?.full_name || "البائع"}
@@ -626,15 +545,14 @@ export default function ProductDetailsPage() {
                       className="relative w-full bg-gray-100 flex items-center justify-center p-2"
                       style={{ aspectRatio: "1/1" }}
                     >
-                      <img
-                        src={
-                          relatedProduct.image_urls?.[0] ||
-                          "/placeholder-image.jpg"
-                        }
-                        alt={relatedProduct.title}
-                        className="max-w-full max-h-full object-contain"
-                        onError={handleImageError}
-                      />
+<Image
+  src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
+  alt={relatedProduct.title}
+  fill
+  className="object-contain"
+  onError={handleImageError}
+  sizes="(max-width: 768px) 50vw, 25vw"
+/>
                     </div>
                     <div className="p-3">
                       <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
@@ -659,12 +577,14 @@ export default function ProductDetailsPage() {
             {/* Image */}
             <div className="relative p-3">
               <div className="relative w-full h-60 bg-gray-100 rounded-2xl flex items-center justify-center p-4">
-                <img
-                  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-                  alt={product.title}
-                  className="max-w-full max-h-full object-contain"
-                  onError={handleImageError}
-                />
+<Image
+  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+  alt={product.title}
+  fill
+  className="object-contain"
+  onError={handleImageError}
+  sizes="100vw"
+/>
               </div>
 
               {/* Navigation Button */}
@@ -678,11 +598,14 @@ export default function ProductDetailsPage() {
             {/* Mobile Action Buttons */}
             <div className="p-4 border-b border-gray-100">
               <div className="flex items-center gap-2 mb-2">
-                <img
-                  src={seller?.avatar_url || "/avatar.svg"}
-                  alt="البائع"
-                  className="w-8 h-8 rounded-full object-cover bg-gray-100"
-                />
+<Image
+  src={seller?.avatar_url || "/avatar.svg"}
+  alt="البائع"
+  width={32}
+  height={32}
+  className="rounded-full object-cover bg-gray-100"
+  onError={(e) => { e.target.src = "/avatar.svg"; }}
+/>
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
                     {seller?.full_name || "البائع"}
@@ -776,16 +699,14 @@ export default function ProductDetailsPage() {
                   className="relative w-full bg-gray-100 flex items-center justify-center p-2"
                   style={{ aspectRatio: "1/1" }}
                 >
-                  <img
-                    src={
-                      relatedProduct.image_urls?.[0] ||
-                      "/placeholder-image.jpg"
-                    }
-                    alt={relatedProduct.title}
-                    className="max-w-full max-h-full object-contain"
-                    onError={handleImageError}
-                    loading="lazy"
-                  />
+<Image
+  src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
+  alt={relatedProduct.title}
+  fill
+  className="object-contain"
+  onError={handleImageError}
+  sizes="(max-width: 768px) 50vw, 25vw"
+/>
                 </div>
                 <div className="p-3">
                   <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">

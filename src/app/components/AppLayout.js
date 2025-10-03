@@ -1,67 +1,93 @@
+// src/app/components/AppLayout.js
 "use client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useEffect, useState } from "react";
+import { createClient } from '../../../lib/supabase';
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  Home,
-  Search,
-  Plus,
-  Settings,
-  ChevronDown,
-  LogOut,
-  PlusCircle,
-  Heart,
-  User,
-} from "lucide-react";
+import Image from 'next/image';
+import { Home, Search, Plus, Settings, ChevronDown, LogOut, PlusCircle, Heart, User } from "lucide-react";
+
+// ✅ قائمة بيضاء للمسارات المسموح بها
+const ALLOWED_ROUTES = [
+  '/main',
+  '/search',
+  '/add-product',
+  '/favorites',
+  '/dashboard',
+  '/settings',
+  '/product'
+];
 
 export default function AppLayout({ children }) {
-  const supabase = createClientComponentClient();
+  const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const pathname = usePathname();
-
+  
   const [user, setUser] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [searchInputValue, setSearchInputValue] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // التحقق من المصادقة
+  // ✅ التحقق من المصادقة مع cleanup
   useEffect(() => {
+    let mounted = true;
+
     const checkAuth = async () => {
-      const {
-        data: { user: authUser },
-        error,
-      } = await supabase.auth.getUser();
+      try {
+        const { data: { user: authUser }, error } = await supabase.auth.getUser();
+        
+        if (!mounted) return;
 
-      if (error || !authUser) {
-        router.push("/");
-        return;
+        if (error || !authUser) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error("Auth error:", error?.message);
+          }
+          router.replace("/auth");
+          return;
+        }
+
+        const { data: userProfile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", authUser.id)
+          .single();
+
+        if (!mounted) return;
+
+        if (profileError) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error("Profile fetch error:", profileError.message);
+          }
+        }
+
+        setUser(userProfile || authUser);
+        setIsLoading(false);
+      } catch (err) {
+        if (!mounted) return;
+        if (process.env.NODE_ENV === 'development') {
+          console.error("Unexpected error:", err);
+        }
+        setAuthError("حدث خطأ في التحقق من الهوية");
+        setIsLoading(false);
       }
-
-      const { data: userProfile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", authUser.id)
-        .single();
-
-      setUser(userProfile || authUser);
-      setLoading(false);
     };
 
     checkAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, [supabase, router]);
 
-  // إدارة النقر خارج القوائم
+  // ✅ إدارة النقر خارج القوائم مع cleanup
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showUserMenu && !event.target.closest(".user-menu-container")) {
         setShowUserMenu(false);
       }
-      if (
-        showSettingsMenu &&
-        !event.target.closest(".settings-menu-container")
-      ) {
+      if (showSettingsMenu && !event.target.closest(".settings-menu-container")) {
         setShowSettingsMenu(false);
       }
     };
@@ -70,15 +96,63 @@ export default function AppLayout({ children }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showUserMenu, showSettingsMenu]);
 
-  // دالة للتحقق من الصفحة النشطة
-  const isActive = (path) => pathname === path;
+  // ✅ دالة آمنة للتوجيه
+  const safeNavigate = useCallback((path) => {
+    const isAllowed = ALLOWED_ROUTES.some(route => path.startsWith(route));
+    if (isAllowed && path.startsWith('/')) {
+      router.push(path);
+    }
+  }, [router]);
 
-  // شاشة التحميل
-  if (loading || !user) {
+  // ✅ معالجة البحث بشكل آمن
+  const handleSearch = useCallback((e) => {
+    e.preventDefault();
+    const sanitized = searchInputValue.trim().substring(0, 100);
+    if (sanitized) {
+      router.push(`/search?q=${encodeURIComponent(sanitized)}`);
+    } else {
+      router.push("/search");
+    }
+  }, [searchInputValue, router]);
+
+  // ✅ تسجيل الخروج الآمن
+  const handleSignOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      router.replace("/auth");
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Sign out error:", err);
+      }
+    }
+  }, [supabase, router]);
+
+  const isActive = useCallback((path) => pathname === path, [pathname]);
+
+  // شاشة الخطأ
+  if (authError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" ></div>
+          <p className="text-red-600">{authError}</p>
+          <button
+            onClick={() => router.replace("/auth")}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            العودة لتسجيل الدخول
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // شاشة التحميل
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">جاري التحقق من المصادقة...</p>
         </div>
       </div>
     );
@@ -89,85 +163,90 @@ export default function AppLayout({ children }) {
       {/* Desktop Sidebar */}
       <div className="hidden md:block fixed right-0 top-0 h-full w-20 bg-white border-l border-gray-200 z-50">
         <div className="flex flex-col items-center py-6 h-full">
-          {/* Logo */}
-          <button
-            onClick={() => router.push("/main")}
-            className="mb-8 text-white transition-colors"
+          <button 
+            onClick={() => safeNavigate("/main")} 
+            className="mb-8"
+            aria-label="الصفحة الرئيسية"
           >
-            <img
+            <Image
               src="/logo (6).jpeg"
               alt="شعار الموقع"
-              className="w-11 h-11 rounded-xl object-cover"
+              width={44}
+              height={44}
+              className="rounded-xl object-cover"
+              priority
             />
           </button>
-
-          {/* Navigation Icons */}
-          <div className="flex flex-col gap-4 mb-auto">
+          
+          <nav className="flex flex-col gap-4 mb-auto" aria-label="القائمة الرئيسية">
             <button
-              onClick={() => router.push("/main")}
+              onClick={() => safeNavigate("/main")}
               className={`p-3 rounded-xl transition-colors ${
-                isActive("/main")
-                  ? "bg-gray-100 text-black"
+                isActive("/main") 
+                  ? "bg-gray-100 text-black" 
                   : "text-gray-600 hover:bg-gray-50"
               }`}
-              title="الصفحة الرئيسية"
+              aria-label="الصفحة الرئيسية"
+              aria-current={isActive("/main") ? "page" : undefined}
             >
               <Home className="w-6 h-6" />
             </button>
-
+            
             <button
-              onClick={() => router.push("/search")}
+              onClick={() => safeNavigate("/search")}
               className={`p-3 rounded-xl transition-colors ${
-                isActive("/search")
-                  ? "bg-gray-100 text-black"
+                isActive("/search") 
+                  ? "bg-gray-100 text-black" 
                   : "text-gray-600 hover:bg-gray-50"
               }`}
-              title="البحث"
+              aria-label="البحث"
+              aria-current={isActive("/search") ? "page" : undefined}
             >
               <Search className="w-6 h-6" />
             </button>
-
+            
             <button
-              onClick={() => router.push("/add-product")}
+              onClick={() => safeNavigate("/add-product")}
               className={`p-3 rounded-xl transition-colors ${
-                isActive("/add-product")
-                  ? "bg-gray-100 text-black"
+                isActive("/add-product") 
+                  ? "bg-gray-100 text-black" 
                   : "text-gray-600 hover:bg-gray-50"
               }`}
-              title="إضافة منتج"
+              aria-label="إضافة منتج"
+              aria-current={isActive("/add-product") ? "page" : undefined}
             >
               <Plus className="w-6 h-6" />
             </button>
-
+            
             <button
-              onClick={() => router.push("/favorites")}
+              onClick={() => safeNavigate("/favorites")}
               className={`p-3 rounded-xl transition-colors ${
-                isActive("/favorites")
-                  ? "bg-gray-100 text-black"
+                isActive("/favorites") 
+                  ? "bg-gray-100 text-black" 
                   : "text-gray-600 hover:bg-gray-50"
               }`}
-              title="المفضلة"
+              aria-label="المفضلة"
+              aria-current={isActive("/favorites") ? "page" : undefined}
             >
               <Heart className="w-6 h-6" />
             </button>
-          </div>
-
-          {/* Settings at bottom */}
+          </nav>
+          
           <div className="relative settings-menu-container">
             <button
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
               className="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-              title="الإعدادات"
+              aria-label="الإعدادات"
+              aria-expanded={showSettingsMenu}
             >
               <Settings className="w-6 h-6" />
             </button>
-
-            {/* قائمة الإعدادات المنبثقة */}
+            
             {showSettingsMenu && (
-              <div className="absolute ml-2 bottom-13 w-100 bg-white rounded-xl shadow-lg border py-2 z-50">
+              <div className="absolute left-2 bottom-16 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
                 <button
                   onClick={() => {
-                    router.push("/settings");
+                    safeNavigate("/settings");
                     setShowSettingsMenu(false);
                   }}
                   className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
@@ -183,62 +262,52 @@ export default function AppLayout({ children }) {
 
       {/* Main Content */}
       <div className="md:mr-20">
-        {/* Top Bar - Desktop */}
-        <div className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
+        {/* Desktop Header */}
+        <header className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
           <div className="px-6 py-4">
             <div className="flex items-center gap-4">
-              {/* Search Input */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (searchInputValue.trim()) {
-                    router.push(
-                      `/search?q=${encodeURIComponent(searchInputValue)}`
-                    );
-                  } else {
-                    router.push("/search");
-                  }
-                }}
-                className="flex-1 relative"
-              >
-                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <form onSubmit={handleSearch} className="flex-1 relative">
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                 <input
-                  type="text"
+                  type="search"
                   placeholder="ابحث في المنتجات..."
                   value={searchInputValue}
                   onChange={(e) => setSearchInputValue(e.target.value)}
-                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-2xl border-2 border-gray-200 focus:outline-none"
+                  maxLength={100}
+                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
+                  aria-label="البحث في المنتجات"
                 />
               </form>
-
-              {/* User Menu */}
+              
               <div className="flex relative user-menu-container gap-1">
-                <button
-                  onClick={() => {
-                    router.push("/dashboard");
-                  }}
+                <button 
+                  onClick={() => safeNavigate("/dashboard")}
+                  aria-label="الملف الشخصي"
                 >
-                  <img
+                  <Image
                     src={user.avatar_url || "/avatar.svg"}
                     alt="صورة المستخدم"
-                    className="w-10 h-10 rounded-full border-2 border-gray-200 object-cover"
-                    onError={(e) => {
-                      e.target.src = "/avatar.svg";
-                    }}
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-gray-200 object-cover"
+                    onError={(e) => { e.target.src = "/avatar.svg"; }}
                   />
                 </button>
+                
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 p-2 rounded-2xl hover:bg-gray-100 transition-colors"
+                  aria-label="قائمة المستخدم"
+                  aria-expanded={showUserMenu}
                 >
                   <ChevronDown className="w-4 h-4 text-gray-600" />
                 </button>
-
+                
                 {showUserMenu && (
-                  <div className="absolute left-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
+                  <div className="absolute left-0 top-12 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
                     <button
                       onClick={() => {
-                        router.push("/dashboard");
+                        safeNavigate("/dashboard");
                         setShowUserMenu(false);
                       }}
                       className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
@@ -246,12 +315,11 @@ export default function AppLayout({ children }) {
                       <User className="w-5 h-5 text-gray-500" />
                       <span>الملف الشخصي</span>
                     </button>
-                    <hr className="my-1" />
+                    
+                    <hr className="my-1 border-gray-200" />
+                    
                     <button
-                      onClick={async () => {
-                        await supabase.auth.signOut();
-                        router.push("/");
-                      }}
+                      onClick={handleSignOut}
                       className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3 text-red-600"
                     >
                       <LogOut className="w-5 h-5" />
@@ -259,95 +327,89 @@ export default function AppLayout({ children }) {
                     </button>
                   </div>
                 )}
-				
               </div>
-			  
             </div>
           </div>
-        </div>
-
-        {/* Page Content */}
-        {children}
+        </header>
+        
+        <main>{children}</main>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50"
-        style={{ height: "70px" }}
+      <nav 
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50 h-[70px]"
+        aria-label="القائمة السفلية"
       >
         <div className="flex items-center justify-around h-full">
           <button
-            onClick={() => router.push("/main")}
+            onClick={() => safeNavigate("/main")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/main") ? "" : "text-gray-600"
+              isActive("/main") 
+                ? "bg-[#3f47cc] text-white" 
+                : "text-gray-600"
             }`}
-            style={
-              isActive("/main") ? { color: "white", background: "#3f47cc" } : {}
-            }
+            aria-label="الرئيسية"
+            aria-current={isActive("/main") ? "page" : undefined}
           >
             <Home className="w-5 h-5" />
           </button>
-
+          
           <button
-            onClick={() => router.push("/search")}
+            onClick={() => safeNavigate("/search")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/search") ? "" : "text-gray-600"
+              isActive("/search") 
+                ? "bg-[#3f47cc] text-white" 
+                : "text-gray-600"
             }`}
-            style={
-              isActive("/search")
-                ? { color: "white", background: "#3f47cc" }
-                : {}
-            }
+            aria-label="البحث"
+            aria-current={isActive("/search") ? "page" : undefined}
           >
             <Search className="w-5 h-5" />
           </button>
-
+          
           <button
-            onClick={() => router.push("/add-product")}
+            onClick={() => safeNavigate("/add-product")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg ${
-              isActive("/add-product") ? "" : "text-gray-600"
+              isActive("/add-product") 
+                ? "bg-[#3f47cc] text-white" 
+                : "text-gray-600"
             }`}
-            style={
-              isActive("/add-product")
-                ? { color: "white", background: "#3f47cc" }
-                : {}
-            }
+            aria-label="إضافة"
+            aria-current={isActive("/add-product") ? "page" : undefined}
           >
             <PlusCircle className="w-5 h-5" />
           </button>
-
+          
           <button
-            onClick={() => router.push("/favorites")}
+            onClick={() => safeNavigate("/favorites")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/favorites") ? "" : "text-gray-600"
+              isActive("/favorites") 
+                ? "bg-[#3f47cc] text-white" 
+                : "text-gray-600"
             }`}
-            style={
-              isActive("/favorites")
-                ? { color: "white", background: "#3f47cc" }
-                : {}
-            }
+            aria-label="المفضلة"
+            aria-current={isActive("/favorites") ? "page" : undefined}
           >
             <Heart className="w-5 h-5" />
           </button>
-
+          
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => safeNavigate("/dashboard")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              isActive("/dashboard") ? "" : "text-gray-600"
+              isActive("/dashboard") 
+                ? "bg-[#3f47cc] text-white border border-[#3f47cc]" 
+                : "text-gray-600"
             }`}
-            style={
-              isActive("/dashboard")
-                ? { color: "white", background: "#3f47cc", border: "1px solid #3f47cc" }
-                : {}
-            }
+            aria-label="حسابي"
+            aria-current={isActive("/dashboard") ? "page" : undefined}
           >
             <User className="w-5 h-5" />
           </button>
         </div>
-      </div>
-
-      {/* Mobile Bottom Spacing */}
-      <div className="md:hidden h-20"></div>
+      </nav>
+      
+      {/* Mobile Navigation Spacer */}
+      <div className="md:hidden h-20" aria-hidden="true"></div>
     </div>
   );
 }

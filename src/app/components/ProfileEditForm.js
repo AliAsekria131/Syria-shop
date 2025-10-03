@@ -1,20 +1,20 @@
 "use client";
-import React from "react";
-import { useEffect, useState, useCallback } from "react";
-import {
-  X,
-} from "lucide-react";
-
-// مكون تعديل الملف الشخصي - محسن مع Supabase Storage
+import React, { useState } from "react";
+import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
+  import Image from 'next/image';
 export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
+	const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: user.full_name || "",
     phone: user.phone || "",
     location: user.location || "",
   });
   const [avatarFile, setAvatarFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(user.avatar_url || "/avatar.svg");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
 
   const syrianGovernorates = [
     "دمشق",
@@ -33,39 +33,31 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
     "الحسكة",
   ];
 
-// دالة رفع الصورة إلى Supabase Storage - محدثة
-const uploadAvatar = async (file) => {
-  try {
-    // إنشاء اسم فريد للملف (نفس طريقة add-product)
-    const fileExt = file.name.split('.').pop();
-    const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`;
-    
-    // رفع الصورة إلى Supabase Storage
-    const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+  const uploadAvatar = async (file) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-    if (error) {
-      console.error("Supabase upload error:", error);
-      throw new Error(error.message || "فشل في رفع الصورة");
+      if (error) {
+        throw new Error(error.message || "فشل في رفع الصورة");
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      throw new Error("فشل في رفع الصورة: " + error.message);
     }
-
-    // الحصول على الرابط العام للصورة
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-
-    console.log("Avatar upload successful, URL:", publicUrl);
-    return publicUrl;
-
-  } catch (error) {
-    console.error("Upload error:", error);
-    throw new Error("فشل في رفع الصورة: " + error.message);
-  }
-};
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -74,12 +66,10 @@ const uploadAvatar = async (file) => {
     try {
       let avatar_url = user.avatar_url;
 
-      // رفع الصورة الجديدة إذا تم اختيارها
       if (avatarFile) {
         avatar_url = await uploadAvatar(avatarFile);
       }
 
-      // تحديث بيانات المستخدم في قاعدة البيانات
       const { data: updatedProfile, error: updateError } = await supabase
         .from("profiles")
         .update({
@@ -110,11 +100,12 @@ const uploadAvatar = async (file) => {
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
   };
 
   return (
@@ -136,25 +127,20 @@ const uploadAvatar = async (file) => {
       )}
 
       <div className="flex flex-col items-center gap-3 mb-6">
-        <img
-          src={
-            avatarFile
-              ? URL.createObjectURL(avatarFile)
-              : user.avatar_url || "/avatar.svg"
-          }
-          alt="avatar preview"
-          className="w-24 h-24 rounded-full border-4 object-cover bg-white"
-          style={{ borderColor: "#1877F2" }}
-        />
+
+<Image
+  src={previewUrl || "/avatar.svg"} // طريقة أفضل للتعامل مع الصور الاحتياطية
+  alt="avatar preview"
+  width={96} // يجب تحديد العرض
+  height={96} // يجب تحديد الطول
+  className="w-24 h-24 rounded-full border-4 object-cover bg-white"
+  style={{ borderColor: "#1877F2" }}
+/>
         <label className="cursor-pointer">
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setAvatarFile(e.target.files[0]);
-              }
-            }}
+            onChange={handleFileChange}
             className="hidden"
             disabled={loading}
           />
@@ -182,9 +168,8 @@ const uploadAvatar = async (file) => {
           <input
             type="text"
             value={formData.fullName}
-            onChange={(e) => handleInputChange("fullName", e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-            style={{ focusRingColor: "#1877F2" }}
+            onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="أدخل اسمك الكامل"
             disabled={loading}
           />
@@ -197,9 +182,8 @@ const uploadAvatar = async (file) => {
           <input
             type="text"
             value={formData.phone}
-            onChange={(e) => handleInputChange("phone", e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-            style={{ focusRingColor: "#1877F2" }}
+            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="09XXXXXXXX"
             disabled={loading}
           />
@@ -211,9 +195,8 @@ const uploadAvatar = async (file) => {
           </label>
           <select
             value={formData.location}
-            onChange={(e) => handleInputChange("location", e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent bg-white"
-            style={{ focusRingColor: "#1877F2" }}
+            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             disabled={loading}
           >
             <option value="">اختر المحافظة</option>
@@ -235,17 +218,9 @@ const uploadAvatar = async (file) => {
         >
           {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
         </button>
-        <button
-          onClick={onClose}
-          disabled={loading}
-          className={`flex-1 py-3 rounded-lg font-medium transition-colors border border-gray-300 ${
-            loading 
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-              : "hover:bg-gray-50"
-          }`}
-        >
-          إلغاء
-        </button>
+<button onClick={() => router.push('/main')} className="flex-1 ...">
+  الرجوع للرئيسية
+</button>
       </div>
     </div>
   );

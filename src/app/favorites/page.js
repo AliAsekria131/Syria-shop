@@ -1,15 +1,15 @@
 "use client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from '../../../lib/supabase';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Calendar, Trash2, HeartOff, ArrowLeft } from "lucide-react";
+import { MapPin, Calendar, Trash2, HeartOff } from "lucide-react";
 import { getUserLikedProducts, removeLike } from "../../utils/likes";
-import { getCurrentUser } from "../../utils/auth";
 import AppLayout from "../components/AppLayout";
+import Image from 'next/image';
 
 export default function FavoritesPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const router = useRouter();
 
   // الحالات الخاصة بالصفحة فقط
@@ -22,8 +22,8 @@ export default function FavoritesPage() {
   // التحقق من المصادقة وجلب بيانات المستخدم
   useEffect(() => {
     const checkAuth = async () => {
-      const user = await getCurrentUser(supabase);
-      if (!user) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
         router.push("/main");
         return;
       }
@@ -32,7 +32,7 @@ export default function FavoritesPage() {
       const { data: userProfile } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", currentUser.id)
         .single();
 
       setCurrentUser(userProfile || user);
@@ -69,7 +69,7 @@ export default function FavoritesPage() {
   }, [currentUser]);
 
   // دالة إزالة الإعجاب
-  const handleRemoveLike = async (productId, likeId) => {
+  const handleRemoveLike = async (productId) => {
     if (!confirm("هل تريد إزالة هذا المنتج من المُفضلة؟")) {
       return;
     }
@@ -221,15 +221,15 @@ export default function FavoritesPage() {
                     style={{ aspectRatio: "4/3" }}
                     onClick={() => router.push(`/product/${product.id}`)}
                   >
-                    <img
-                      src={
-                        product.image_urls?.[0] || "/placeholder-image.jpg"
-                      }
-                      alt={product.title}
-                      className="w-full h-full object-cover"
-                      onError={handleImageError}
-                      loading="lazy"
-                    />
+<Image
+  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+  alt={product.title}
+  className="w-full h-full object-cover"
+  onError={handleImageError}
+  loading="lazy"
+  width={500} // قم بتعديل هذا الرقم بناءً على التصميم
+  height={300} // قم بتعديل هذا الرقم بناءً على التصميم
+/>
                   </div>
 
                   {/* Product Info */}

@@ -1,9 +1,9 @@
 // utils/likes.js
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from '../../lib/supabase';
 
 // إضافة إعجاب
 export const addLike = async (userId, adId) => {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   
   try {
     const { data, error } = await supabase
@@ -29,7 +29,7 @@ export const addLike = async (userId, adId) => {
 
 // إزالة إعجاب
 export const removeLike = async (userId, adId) => {
-  const supabase = createClientComponentClient();
+ const supabase = createClient();
   
   try {
     const { error } = await supabase
@@ -51,7 +51,7 @@ export const removeLike = async (userId, adId) => {
 
 // التحقق من وجود إعجاب
 export const checkLike = async (userId, adId) => {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   
   try {
     const { data, error } = await supabase
@@ -74,7 +74,7 @@ export const checkLike = async (userId, adId) => {
 
 // جلب عدد الإعجابات للإعلان
 export const getLikesCount = async (adId) => {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   
   try {
     const { count, error } = await supabase
@@ -95,7 +95,7 @@ export const getLikesCount = async (adId) => {
 
 // جلب المنتجات المُعجب بها للمستخدم
 export const getUserLikedProducts = async (userId, limit = 20, offset = 0) => {
-  const supabase = createClientComponentClient();
+ const supabase = createClient();
   
   try {
     // الطريقة الأولى: محاولة الاستعلام مع العلاقة
@@ -162,7 +162,7 @@ export const getUserLikedProducts = async (userId, limit = 20, offset = 0) => {
 
 // الطريقة البديلة في حالة عدم وجود العلاقات
 const getUserLikedProductsAlternative = async (userId, limit = 20, offset = 0) => {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   
   try {
     // أولاً: جلب الإعجابات

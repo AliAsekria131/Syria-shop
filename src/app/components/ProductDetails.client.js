@@ -12,14 +12,13 @@ import {
   X,
   Star,
   Heart,
-  Copy
 } from "lucide-react";
+import Image from 'next/image';
 
 export default function ProductDetails({ 
   product, 
   seller, 
   relatedProducts = [], 
-  currentUser,
   commentsCount = 0 
 }) {
   const [showMobileComments, setShowMobileComments] = useState(false);
@@ -95,11 +94,13 @@ export default function ProductDetails({
           <div className="lg:col-span-2">
             <div className="relative bg-white rounded-2xl overflow-hidden shadow-sm sticky top-6">
               <div className="aspect-[3/4] relative">
-                <img
-                  src={product.image_urls?.[0] || "/placeholder.jpg"}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
+  <Image
+    src={product.image_urls?.[0] || "/placeholder.jpg"}
+    alt={product.title}
+    fill
+    className="object-cover"
+    unoptimized={product.image_urls?.[0]?.startsWith('http')}
+  />
                 
                 {/* Floating Action Buttons */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2">
@@ -281,11 +282,14 @@ export default function ProductDetails({
               <div className="space-y-4">
                 {relatedProducts.slice(0, 6).map((item) => (
                   <div key={item.id} className="flex gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <img
-                      src={item.image_urls?.[0] || "/placeholder.jpg"}
-                      alt={item.title}
-                      className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                    />
+  <Image
+    src={item.image_urls?.[0] || "/placeholder.jpg"}
+    alt={item.title}
+    fill
+    className="object-cover"
+    unoptimized={item.image_urls?.[0]?.startsWith('http')}
+    sizes="64px"
+  />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm line-clamp-2 mb-1">
                         {item.title}

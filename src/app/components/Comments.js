@@ -1,42 +1,43 @@
 // Comments.js - Pinterest Style
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback} from "react";
 import { MessageCircle, Send, X, ChevronDown, SendIcon } from "lucide-react";
+import UserAvatar from './UserAvatar';
 
-export default function Comments({ productId, currentUser, supabase, isOwner, showMobile = false, onClose }) {
+export default function Comments({ productId, currentUser, supabase, showMobile = false, onClose }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetchingComments, setFetchingComments] = useState(true);
   const [showAllComments, setShowAllComments] = useState(false);
 
-  // جلب التعليقات
+const fetchComments = useCallback(async () => {
+  try {
+    const { data, error } = await supabase
+      .from("comments")
+      .select(`
+        *,
+        profiles(full_name, avatar_url)
+      `)
+      .eq("product_id", productId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    setComments(data || []);
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+  } finally {
+    setFetchingComments(false);
+  }
+}, [productId, supabase]);
+  
+    // جلب التعليقات
   useEffect(() => {
     if (productId) {
       fetchComments();
     }
-  }, [productId]);
-
-  const fetchComments = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("comments")
-        .select(`
-          *,
-          profiles(full_name, avatar_url)
-        `)
-        .eq("product_id", productId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setComments(data || []);
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    } finally {
-      setFetchingComments(false);
-    }
-  };
+  }, [productId, fetchComments]);
 
   // إضافة تعليق جديد
   const addComment = async () => {
@@ -129,12 +130,7 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
               </div>
             ) : comments.length > 0 ? comments.map((comment) => (
               <div key={comment.id} className="flex gap-3 mb-6">
-                <img
-                  src={comment.profiles?.avatar_url || "/avatar.svg"}
-                  alt="مستخدم"
-                  className="w-10 h-10 rounded-full object-cover bg-gray-100"
-                  onError={(e) => { e.target.src = "/avatar.svg"; }}
-                />
+<UserAvatar src={comment.profiles?.avatar_url} alt="مستخدم" size={40} />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -171,12 +167,7 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
           {/* Add Comment - Fixed at bottom */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
             <div className="flex gap-3 items-center">
-              <img
-                src={currentUser?.avatar_url || "/avatar.svg"}
-                alt="أنت"
-                className="w-10 h-10 rounded-full object-cover bg-gray-100"
-                onError={(e) => { e.target.src = "/avatar.svg"; }}
-              />
+<UserAvatar src={currentUser?.avatar_url} alt="أنت" size={40} />
               <div className="flex-1 flex gap-2">
                 <input
                   type="text"
@@ -229,12 +220,7 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
         <div className="mb-4 space-y-3">
           {/* التعليق الأول دائماً */}
           <div className="flex gap-3">
-            <img
-              src={comments[0].profiles?.avatar_url || "/avatar.svg"}
-              alt="مستخدم"
-              className="w-8 h-8 rounded-full object-cover bg-gray-100"
-              onError={(e) => { e.target.src = "/avatar.svg"; }}
-            />
+<UserAvatar src={comments[0].profiles?.avatar_url} alt="مستخدم" size={32} />
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
@@ -261,12 +247,11 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
           {/* باقي التعليقات عند الضغط على السهم */}
           {showAllComments && comments.slice(1).map((comment) => (
             <div key={comment.id} className="flex gap-3 border-t pt-3">
-              <img
-                src={comment.profiles?.avatar_url || "/avatar.svg"}
-                alt="مستخدم"
-                className="w-8 h-8 rounded-full object-cover bg-gray-100"
-                onError={(e) => { e.target.src = "/avatar.svg"; }}
-              />
+<UserAvatar 
+  src={comment.profiles?.avatar_url} 
+  alt="مستخدم" 
+  size={32} 
+/>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
@@ -297,12 +282,11 @@ export default function Comments({ productId, currentUser, supabase, isOwner, sh
 
       {/* صندوق إضافة تعليق */}
       <div className="flex gap-3">
-  <img
-    src={currentUser?.avatar_url || "/avatar.svg"}
-    alt="أنت"
-    className="w-8 h-8 rounded-full object-cover bg-gray-100"
-    onError={(e) => { e.target.src = "/avatar.svg"; }}
-  />
+<UserAvatar 
+  src={currentUser?.avatar_url} 
+  alt="أنت" 
+  size={32} 
+/>
   <div className="flex flex-1 items-center gap-2">
    {/*  focus:bg-white focus:ring-2 focus:ring-red-500 */}
     <input
