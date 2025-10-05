@@ -1,4 +1,4 @@
-'use client's
+'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { resetPassword } from '../../../../lib/auth'
