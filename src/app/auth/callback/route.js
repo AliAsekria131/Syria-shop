@@ -1,143 +1,86 @@
-// ============================================
-// ملف: auth/callback/route.js
-// المسار: src/app/auth/callback/route.js
-// ============================================
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
-const ALLOWED_REDIRECTS = [
-  '/main',
-  '/dashboard',
-  '/favorites',
-  '/add-product',
-  '/settings',
-  '/search'
-];
-
-function getSafeRedirectPath(redirectTo) {
-  if (!redirectTo || typeof redirectTo !== 'string') {
-    return '/main';
-  }
-
-  if (!redirectTo.startsWith('/') || redirectTo.startsWith('//')) {
-    return '/main';
-  }
-
-  const isAllowed = ALLOWED_REDIRECTS.some(allowed => 
-    redirectTo === allowed || redirectTo.startsWith(allowed + '/')
-  );
-
-  return isAllowed ? redirectTo : '/main';
-}
-
+/**
+ * معالجة Callback من Supabase Auth
+ * يتم استدعاء هذا الـ Route عند:
+ * 1. تأكيد البريد الإلكتروني (Email Verification)
+ * 2. النقر على رابط استعادة كلمة المرور (Password Reset)
+ */
 export async function GET(request) {
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
+  const error = requestUrl.searchParams.get('error')
+  const error_description = requestUrl.searchParams.get('error_description')
+
+  // إذا كان هناك خطأ من Supabase
+  if (error) {
+    console.error('Auth callback error:', error, error_description)
+    return NextResponse.redirect(
+      new URL(`/auth?error=${encodeURIComponent(error_description || error)}`, requestUrl.origin)
+    )
+  }
+
+  // إذا لم يكن هناك code، إعادة توجيه إلى صفحة المصادقة
+  if (!code) {
+    return NextResponse.redirect(new URL('/auth', requestUrl.origin))
+  }
+
   try {
-    const requestUrl = new URL(request.url);
-    const code = requestUrl.searchParams.get('code');
-    const redirectTo = requestUrl.searchParams.get('redirectTo');
-    const type = requestUrl.searchParams.get('type');
-    const error_code = requestUrl.searchParams.get('error');
-    const error_description = requestUrl.searchParams.get('error_description');
+    const cookieStore = await cookies()
+    const supabase = await createServerSupabaseClient(cookieStore)
 
-    // معالجة الأخطاء من Supabase
-    if (error_code) {
-      console.error('OAuth error:', error_code, error_description);
+    // تبادل الـ code بـ session
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (exchangeError) {
+      console.error('Code exchange error:', exchangeError)
       return NextResponse.redirect(
-        new URL(`/auth?error=${encodeURIComponent(error_description || error_code)}`, requestUrl.origin)
-      );
+        new URL('/auth?error=رابط غير صالح أو منتهي الصلاحية', requestUrl.origin)
+      )
     }
 
-    // التحقق من وجود code
-    if (!code) {
-      return NextResponse.redirect(
-        new URL('/auth?error=missing_code', requestUrl.origin)
-      );
+    // التحقق من نوع الحدث
+    const { user } = data
+
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth', requestUrl.origin))
     }
 
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name, value, options) {
-            try {
-              cookieStore.set({ name, value, ...options });
-            } catch (error) {
-              // تجاهل أخطاء الـ cookies في middleware
-              if (process.env.NODE_ENV === 'development') {
-                console.warn('Cookie set error:', error);
-              }
-            }
-          },
-          remove(name, options) {
-            try {
-              cookieStore.delete({ name, ...options });
-            } catch (error) {
-              // تجاهل أخطاء الـ cookies
-              if (process.env.NODE_ENV === 'development') {
-                console.warn('Cookie remove error:', error);
-              }
-            }
-          },
-        },
-      }
-    );
+    // إذا كان المستخدم جديداً (Email Verification)
+    // إنشاء Profile في قاعدة البيانات
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
 
-    // استبدال الـ code بـ session
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (error) {
-      console.error('Auth callback error:', error);
-      return NextResponse.redirect(
-        new URL(`/auth?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
-      );
-    }
-
-    // إنشاء أو تحديث الملف الشخصي
-    if (data?.session?.user) {
-      const user = data.session.user;
-      
-      const { error: profileError } = await supabase
+    // إذا لم يكن الـ Profile موجوداً، إنشاؤه
+    if (profileError || !profile) {
+      const { error: insertError } = await supabase
         .from('profiles')
-        .upsert({
+        .insert({
           id: user.id,
           email: user.email,
-          full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
-          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'id',
-          ignoreDuplicates: false,
-        });
+          full_name: user.user_metadata?.full_name || '',
+          avatar_url: user.user_metadata?.avatar_url || null,
+        })
 
-      if (profileError && process.env.NODE_ENV === 'development') {
-        console.error('Profile upsert error:', profileError);
+      if (insertError) {
+        console.error('Profile creation error:', insertError)
+        // المتابعة حتى لو فشل إنشاء الـ Profile
+        // يمكن إنشاؤه لاحقاً عبر Database Trigger
       }
     }
 
-    // معالجة إعادة تعيين كلمة المرور
-    if (type === 'recovery') {
-      return NextResponse.redirect(
-        new URL('/auth/reset-password', requestUrl.origin)
-      );
-    }
+    // إعادة توجيه إلى الصفحة الرئيسية
+    return NextResponse.redirect(new URL('/main', requestUrl.origin))
 
-    // Redirect إلى الصفحة المطلوبة
-    const safePath = getSafeRedirectPath(redirectTo);
-    const response = NextResponse.redirect(new URL(safePath, requestUrl.origin));
-    
-    return response;
-
-  } catch (error) {
-    console.error('Unexpected error in auth callback:', error);
-    
+  } catch (err) {
+    console.error('Unexpected callback error:', err)
     return NextResponse.redirect(
-      new URL('/auth?error=unexpected_error', new URL(request.url).origin)
-    );
+      new URL('/auth?error=حدث خطأ غير متوقع', requestUrl.origin)
+    )
   }
 }

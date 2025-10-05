@@ -47,12 +47,18 @@ export default function HomePage() {
 
       try {
         const supabase = createClient();
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (user && !error) {
-          router.replace('/main');
-          return;
-        }
+const { data: { session }, error } = await supabase.auth.getSession();
+
+// تأكد أن الجلسة صالحة فعلاً
+if (session?.user && !error) {
+  // تجنب إعادة التوجيه التلقائي إن كان المستخدم على صفحة logout أو auth
+  const restricted = ['/auth', '/logout'];
+  if (!restricted.includes(pathname)) {
+    router.replace('/main');
+    return;
+  }
+}
+
         
         setLoading(false);
       } catch (error) {

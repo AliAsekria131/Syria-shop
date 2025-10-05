@@ -243,7 +243,7 @@ export default function AppLayout({ children }) {
             </button>
             
             {showSettingsMenu && (
-              <div className="absolute left-2 bottom-16 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
+              <div className="absolute right-0 bottom-16 w-80 bg-white rounded-xl shadow-lg border py-2 z-50">
                 <button
                   onClick={() => {
                     safeNavigate("/settings");

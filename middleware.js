@@ -1,77 +1,83 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
+import { createMiddlewareClient } from './lib/supabase'
 
-// قائمة المسارات التي تتطلب مصادقة
-const PROTECTED_PATHS = [
-  '/dashboard', '/add-product', '/favorites', '/settings', '/main'
+// الصفحات المحمية (تحتاج تسجيل دخول)
+const protectedRoutes = [
+  '/dashboard',
+  '/favorites',
+  '/add-product',
+  '/settings',
 ]
 
-// قائمة المسارات الخاصة بتسجيل الدخول
-const AUTH_PATHS = ['/auth', '/login', '/signup']
+// صفحات المصادقة (يجب عدم الوصول إليها إذا كان المستخدم مسجلاً)
+const authRoutes = ['/auth']
+
+// Whitelist للـ redirect URLs المسموحة (حماية من Open Redirect)
+const allowedRedirects = [
+  '/main',
+  '/dashboard',
+  '/favorites',
+  '/settings',
+]
 
 /**
- * دالة مساعدة لإضافة رؤوس الأمان الأساسية
- * @param {NextResponse} response
+ * التحقق من أن الـ redirect URL آمن
  */
-function addSecurityHeaders(response) {
-  const cspHeader = [
-    "default-src 'self'",
-    // السماح للنصوص البرمجية من Supabase و Next.js فقط
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline'", 
-    "style-src 'self' 'unsafe-inline'",
-    // السماح بالصور من Supabase Storage
-    "img-src 'self' data: blob: *.supabase.co",
-    "connect-src 'self' *.supabase.co wss://*.supabase.co",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "base-uri 'self'"
-  ].join('; ');
-
-  response.headers.set('Content-Security-Policy', cspHeader.replace(/\s{2,}/g, ' ').trim());
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+function isAllowedRedirect(redirectPath) {
+  // يجب أن يكون مسار داخلي (يبدأ بـ /)
+  if (!redirectPath.startsWith('/')) {
+    return false
+  }
   
-  return response;
+  // يجب أن يكون في القائمة المسموحة
+  return allowedRedirects.some(allowed => redirectPath.startsWith(allowed))
 }
 
 export async function middleware(request) {
-  const res = NextResponse.next();
-  
-  // إنشاء عميل Supabase مخصص للـ Middleware
-  const supabase = createMiddlewareClient({ req: request, res });
-  
-  // تحديث الجلسة تلقائياً
-  const { data: { session } } = await supabase.auth.getSession();
+  const response = NextResponse.next()
+  const supabase = createMiddlewareClient(request, response)
 
-  const { pathname } = request.nextUrl;
+  // تحديث الجلسة
+  const { data: { session } } = await supabase.auth.getSession()
 
-  // 1. حماية المسارات المحمية: إذا لم يكن المستخدم مسجلاً، وجهه لصفحة الدخول
-  if (PROTECTED_PATHS.some(p => pathname.startsWith(p)) && !session) {
-    const redirectUrl = new URL('/auth', request.url);
-    redirectUrl.searchParams.set('next', pathname); // استخدام 'next' بدلاً من 'redirectTo' كاصطلاح شائع
-    return NextResponse.redirect(redirectUrl);
+  const { pathname } = request.nextUrl
+
+  // إذا كان المستخدم مسجلاً ويحاول الوصول لصفحة المصادقة
+  if (session && authRoutes.some(route => pathname.startsWith(route))) {
+    // التحقق من redirect parameter
+    const redirectParam = request.nextUrl.searchParams.get('redirect')
+    if (redirectParam && isAllowedRedirect(redirectParam)) {
+      return NextResponse.redirect(new URL(redirectParam, request.url))
+    }
+    return NextResponse.redirect(new URL('/main', request.url))
   }
 
-  // 2. إعادة توجيه المستخدمين المسجلين بعيداً عن صفحات المصادقة
-  if (AUTH_PATHS.some(p => pathname.startsWith(p)) && session) {
-    const nextPath = request.nextUrl.searchParams.get('next') || '/main';
-    return NextResponse.redirect(new URL(nextPath, request.url));
-  }
-  
-  // 3. إعادة توجيه من الصفحة الجذر (/) إلى لوحة التحكم إذا كان مسجلاً
-  if (pathname === '/' && session) {
-    return NextResponse.redirect(new URL('/main', request.url));
+  // إذا كان المستخدم غير مسجل ويحاول الوصول لصفحة محمية
+  if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
+    const redirectUrl = new URL('/auth', request.url)
+    // حفظ الصفحة المطلوبة للعودة إليها بعد تسجيل الدخول
+    redirectUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(redirectUrl)
   }
 
-  // إضافة رؤوس الأمان لجميع الاستجابات
-  return addSecurityHeaders(res);
+  // Security Headers
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+
+  return response
 }
 
 export const config = {
   matcher: [
-    // مطابقة جميع المسارات ما عدا الملفات الثابتة وملفات API الداخلية لـ Next.js
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}

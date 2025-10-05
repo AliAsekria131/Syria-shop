@@ -1,10 +1,10 @@
 "use client";
 
 import { createClient } from '../../../lib/supabase';
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import EditProductForm from "../components/EditProductForm";
-import AppLayout from "../components/AppLayout";
+import EditProductForm from "@/app/components/EditProductForm";
+import AppLayout from "@/app/components/AppLayout";
 import Image from 'next/image';
 import {
   Package,
@@ -28,7 +28,6 @@ export default function Dashboard() {
     total: 0,
     active: 0,
     expired: 0,
-    views: 0,
   });
   const [editProductOpen, setEditProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -40,109 +39,96 @@ export default function Dashboard() {
         const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
         
         if (authError || !currentUser) {
-          router.push("/");
+          router.push("/auth");
           return;
         }
 
-        // جلب أو إنشاء الملف الشخصي
+        // جلب الملف الشخصي (بدون إنشاء - الـ Trigger يتكفل بذلك)
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", currentUser.id)
-          .maybeSingle();
-
-        if (profileError && profileError.code !== "PGRST116") {
-          console.error("Profile fetch error:", profileError);
-        }
-
-        if (profile) {
-          setUser(profile);
-          return;
-        }
-
-        // إنشاء ملف شخصي جديد
-        const newProfile = {
-          id: currentUser.id,
-          email: currentUser.email,
-          full_name: currentUser.user_metadata?.full_name || "",
-          phone: currentUser.user_metadata?.phone || "",
-          location: "",
-          avatar_url: "",
-        };
-
-        const { data: createdProfile, error: createError } = await supabase
-          .from("profiles")
-          .insert([newProfile])
-          .select()
           .single();
 
-        setUser(createdProfile || newProfile);
-
-        if (createError) {
-          console.error("Error creating profile:", createError);
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          // في حال عدم وجود profile، إعادة توجيه للإعدادات
+          if (profileError.code === "PGRST116") {
+            router.push("/settings");
+            return;
+          }
         }
+
+        setUser(profile);
       } catch (error) {
         console.error("Auth check error:", error);
-        router.push("/");
+        router.push("/auth");
       }
     };
 
     checkAuth();
-  }, [supabase, router]);
+  }, [router]);
 
   // جلب منتجات المستخدم
-  const fetchMyAds = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error: fetchError } = await supabase
-        .from("ads")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (fetchError) throw fetchError;
-
-      setMyAds(data || []);
-
-      // حساب الإحصائيات
-      const total = data?.length || 0;
-      const active = data?.filter((ad) => ad.status === "active").length || 0;
-      const expired = data?.filter((ad) => ad.status === "expired").length || 0;
-
-      setStats({
-        total,
-        active,
-        expired,
-        views: total * 12, // يمكن استبدالها بعدد حقيقي من قاعدة البيانات
-      });
-    } catch (err) {
-      console.error("Error fetching ads:", err);
-      setError("حدث خطأ في تحميل منتجاتك");
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase, user]);
-
   useEffect(() => {
-    if (user) {
-      fetchMyAds();
-    }
-  }, [user, fetchMyAds]);
+    const fetchMyAds = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { data, error: fetchError } = await supabase
+          .from("ads")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (fetchError) throw fetchError;
+
+        setMyAds(data || []);
+
+        // حساب الإحصائيات
+        const total = data?.length || 0;
+        const active = data?.filter((ad) => ad.status === "active").length || 0;
+        const expired = data?.filter((ad) => ad.status === "expired").length || 0;
+
+        setStats({ total, active, expired });
+      } catch (err) {
+        console.error("Error fetching ads:", err);
+        setError("حدث خطأ في تحميل منتجاتك");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyAds();
+  }, [user]);
 
   // حذف منتج
   const handleDeleteProduct = async (productId) => {
-    if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
+    if (!window.confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
 
     try {
+      // حذف الصور أولاً من Storage
+      const product = myAds.find(ad => ad.id === productId);
+      if (product?.image_urls?.length > 0) {
+        const imagePaths = product.image_urls.map(url => {
+          const urlObj = new URL(url);
+          return urlObj.pathname.split('/').pop();
+        });
+
+        await supabase.storage
+          .from('product-images')
+          .remove(imagePaths);
+      }
+
+      // حذف المنتج
       const { error } = await supabase
         .from("ads")
         .delete()
         .eq("id", productId)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id); // RLS Protection
 
       if (error) throw error;
 
@@ -151,7 +137,8 @@ export default function Dashboard() {
       setStats((prev) => ({
         ...prev,
         total: prev.total - 1,
-        active: prev.active - 1,
+        active: prev.active - (product.status === "active" ? 1 : 0),
+        expired: prev.expired - (product.status === "expired" ? 1 : 0),
       }));
 
       showSuccessMessage("تم حذف المنتج بنجاح");
@@ -180,15 +167,12 @@ export default function Dashboard() {
   const showSuccessMessage = (message) => {
     const successDiv = document.createElement("div");
     successDiv.className =
-      "fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in";
+      "fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50";
     successDiv.textContent = message;
     document.body.appendChild(successDiv);
 
     setTimeout(() => {
-      successDiv.classList.add("animate-slide-out");
-      setTimeout(() => {
-        document.body.removeChild(successDiv);
-      }, 300);
+      successDiv.remove();
     }, 3000);
   };
 
@@ -241,7 +225,6 @@ export default function Dashboard() {
             setEditingProduct(null);
           }}
           onProductUpdated={handleProductUpdated}
-          supabase={supabase}
         />
       )}
 
@@ -288,7 +271,7 @@ export default function Dashboard() {
         </div>
 
         {/* Profile Completion Alert */}
-        {(!user.avatar_url || !user.location) && (
+        {(!user.full_name || !user.avatar_url || !user.location) && (
           <div className="bg-yellow-50 rounded-xl shadow-sm p-4 mb-6 border border-yellow-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
@@ -313,7 +296,7 @@ export default function Dashboard() {
         )}
 
         {/* Statistics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 text-center">
             <div className="w-8 h-8 rounded-lg mx-auto mb-2 bg-blue-100 flex items-center justify-center">
               <Package className="w-5 h-5 text-blue-600" />
@@ -340,14 +323,6 @@ export default function Dashboard() {
             </div>
             <p className="text-2xl font-bold text-red-600">{stats.expired}</p>
             <p className="text-sm text-gray-600">منتهي</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 text-center">
-            <div className="w-8 h-8 rounded-lg mx-auto mb-2 bg-purple-100 flex items-center justify-center">
-              <Eye className="w-5 h-5 text-purple-600" />
-            </div>
-            <p className="text-2xl font-bold text-purple-600">{stats.views}</p>
-            <p className="text-sm text-gray-600">المشاهدات</p>
           </div>
         </div>
 
@@ -376,7 +351,7 @@ export default function Dashboard() {
               <div className="text-center py-12">
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
-                  onClick={fetchMyAds}
+                  onClick={() => window.location.reload()}
                   className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
                 >
                   إعادة المحاولة
@@ -472,7 +447,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => handleEditProduct(product)}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               title="تعديل"
                               disabled={product.status === "expired"}
                             >
