@@ -193,7 +193,7 @@ export default function AuthContent() {
             <div className="text-right">
               <button
                 type="button"
-                onClick={() => router.push('/reset-password')}
+                onClick={() => router.push('auth/reset-password')}
                 className="text-sm text-blue-600 hover:text-blue-700"
               >
                 نسيت كلمة المرور؟
