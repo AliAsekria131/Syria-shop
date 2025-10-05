@@ -5,8 +5,6 @@ const PRODUCT_TITLE_MIN = 3;
 const PRODUCT_TITLE_MAX = 100;
 const PRODUCT_DESC_MIN = 10;
 const PRODUCT_DESC_MAX = 500;
-const PASSWORD_MIN = 6;
-const PASSWORD_MAX = 50;
 
 /**
  * التحقق من صحة بيانات المنتج.
@@ -20,7 +18,25 @@ export const validateProduct = ({ title, price, description, category, location 
   if (title?.length > PRODUCT_TITLE_MAX) {
     errors.push(`عنوان المنتج طويل جداً (${PRODUCT_TITLE_MAX} حرف كحد أقصى).`);
   }
-  // ... (بقية قواعد التحقق تبقى كما هي)
+
+  if (!description || description.trim().length < PRODUCT_DESC_MIN) {
+    errors.push(`الوصف يجب أن يكون ${PRODUCT_DESC_MIN} أحرف على الأقل.`);
+  }
+  if (description?.length > PRODUCT_DESC_MAX) {
+    errors.push(`الوصف طويل جداً (${PRODUCT_DESC_MAX} حرف كحد أقصى).`);
+  }
+
+  if (!price || price <= 0) {
+    errors.push('السعر يجب أن يكون أكبر من صفر.');
+  }
+
+  if (!category || category.trim().length === 0) {
+    errors.push('يجب اختيار فئة المنتج.');
+  }
+
+  if (!location || location.trim().length === 0) {
+    errors.push('يجب اختيار الموقع.');
+  }
 
   return { isValid: errors.length === 0, errors };
 };
@@ -38,7 +54,6 @@ export function validateEmail(email) {
     return { valid: false, error: 'البريد الإلكتروني غير صحيح' }
   }
 
-  // الحد الأقصى للطول
   if (email.length > 255) {
     return { valid: false, error: 'البريد الإلكتروني طويل جداً' }
   }
@@ -48,8 +63,6 @@ export function validateEmail(email) {
 
 /**
  * التحقق من قوة كلمة المرور
- * - 8 أحرف على الأقل
- * - تحتوي على أحرف وأرقام
  */
 export function validatePassword(password) {
   if (!password) {
@@ -85,13 +98,12 @@ export function validatePasswordMatch(password, confirmPassword) {
 }
 
 /**
- * تنظيف المدخلات من XSS
- * إزالة HTML tags والأحرف الخطيرة
+ * تنظيف النصوص من HTML والأحرف الخطيرة (XSS Protection)
  */
-export function sanitizeInput(input) {
-  if (typeof input !== 'string') return input
+export function cleanText(text) {
+  if (typeof text !== 'string') return text
 
-  return input
+  return text
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
@@ -101,17 +113,44 @@ export function sanitizeInput(input) {
 }
 
 /**
+ * تنظيف المدخلات من XSS (نفس cleanText - للتوافق مع الكود القديم)
+ */
+export function sanitizeInput(input) {
+  return cleanText(input)
+}
+
+/**
+ * تحويل السعر من نص إلى رقم
+ * يزيل الفواصل والمسافات ويحول إلى رقم صحيح
+ */
+export function parsePrice(priceInput) {
+  if (!priceInput && priceInput !== 0) return 0
+  
+  // إذا كان رقم بالفعل، إرجاعه مباشرة
+  if (typeof priceInput === 'number') {
+    return Math.max(0, Math.floor(priceInput))
+  }
+  
+  // تنظيف النص من الفواصل والمسافات
+  const cleaned = String(priceInput).replace(/[,\s]/g, '')
+  
+  // تحويل إلى رقم
+  const parsed = parseFloat(cleaned)
+  
+  // إرجاع رقم صحيح موجب أو صفر
+  return isNaN(parsed) ? 0 : Math.max(0, Math.floor(parsed))
+}
+
+/**
  * التحقق من رقم الهاتف (اختياري)
  */
 export function validatePhone(phone) {
   if (!phone) {
-    return { valid: true } // Phone is optional
+    return { valid: true }
   }
 
-  // إزالة المسافات والرموز
   const cleaned = phone.replace(/[\s\-\(\)]/g, '')
 
-  // التحقق من أن الرقم يحتوي على أرقام فقط وطوله مناسب
   if (!/^\+?[0-9]{8,15}$/.test(cleaned)) {
     return { valid: false, error: 'رقم الهاتف غير صحيح' }
   }
