@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn, signUp } from '../../../lib/auth'
 import { validateEmail, validatePassword, validatePasswordMatch, validateFullName, sanitizeInput } from '@/utils/validation'
+
+import { useState, useEffect } from 'react'
+
 
 export default function AuthContent() {
   const router = useRouter()
@@ -18,6 +20,9 @@ export default function AuthContent() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  
+  
+  const [checkingAuth, setCheckingAuth] = useState(true)
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -110,9 +115,45 @@ export default function AuthContent() {
     setError('')
     setSuccess('')
   }
+  
+  // أضف useEffect للتحقق من المستخدم
+useEffect(() => {
+  const checkUser = async () => {
+    const { createBrowserClient } = await import('@supabase/ssr')
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
+    
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (session) {
+      router.push(redirectTo)
+      router.refresh()
+    } else {
+      setCheckingAuth(false)
+    }
+  }
+  
+  checkUser()
+}, [router, redirectTo])
+
+// في بداية الـ return، أضف:
+if (checkingAuth) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+        <p className="mt-2 text-gray-600">جاري التحقق...</p>
+      </div>
+    </div>
+  )
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+	
+	
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">

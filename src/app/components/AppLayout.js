@@ -80,7 +80,7 @@ export default function AppLayout({ children }) {
       mounted = false;
     };
   }, [supabase, router]);
-
+///////////////////////////////////////
   // ✅ إدارة النقر خارج القوائم مع cleanup
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,7 +95,7 @@ export default function AppLayout({ children }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showUserMenu, showSettingsMenu]);
-
+/////////////////////////////////////
   // ✅ دالة آمنة للتوجيه
   const safeNavigate = useCallback((path) => {
     const isAllowed = ALLOWED_ROUTES.some(route => path.startsWith(route));
@@ -103,7 +103,7 @@ export default function AppLayout({ children }) {
       router.push(path);
     }
   }, [router]);
-
+/////////////////////////////////////
   // ✅ معالجة البحث بشكل آمن
   const handleSearch = useCallback((e) => {
     e.preventDefault();
@@ -114,7 +114,7 @@ export default function AppLayout({ children }) {
       router.push("/search");
     }
   }, [searchInputValue, router]);
-
+////////////////////////////////////
   // ✅ تسجيل الخروج الآمن
   const handleSignOut = useCallback(async () => {
     try {
@@ -126,7 +126,7 @@ export default function AppLayout({ children }) {
       }
     }
   }, [supabase, router]);
-
+///////////////////////////////////
   const isActive = useCallback((path) => pathname === path, [pathname]);
 
   // شاشة الخطأ

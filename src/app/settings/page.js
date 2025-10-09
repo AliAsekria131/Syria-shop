@@ -61,18 +61,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!user || loading) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">جاري التحميل...</p>
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
+
 
   return (
     <AppLayout>

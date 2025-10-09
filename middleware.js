@@ -10,7 +10,7 @@ const protectedRoutes = [
 ]
 
 // صفحات المصادقة (يجب عدم الوصول إليها إذا كان المستخدم مسجلاً)
-const authRoutes = ['/auth']
+const authRoutes = ['/auth','/auth/reset-password']
 
 // Whitelist للـ redirect URLs المسموحة (حماية من Open Redirect)
 const allowedRedirects = [

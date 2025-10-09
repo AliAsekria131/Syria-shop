@@ -1,8 +1,10 @@
 'use client'
-import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 import { resetPassword } from '../../../../lib/auth'
 import { validateEmail } from '@/utils/validation'
+import { useState, useEffect } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -10,6 +12,29 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  
+  
+  useEffect(() => {
+  const checkUser = async () => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
+    
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (session) {
+      // المستخدم مسجل دخول، توجيهه للصفحة الرئيسية
+      router.push('/main')
+      router.refresh()
+    } else {
+      setCheckingAuth(false)
+    }
+  }
+  
+  checkUser()
+}, [router])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -58,6 +83,17 @@ export default function ResetPasswordPage() {
     )
   }
 
+
+if (checkingAuth) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+        <p className="mt-2 text-gray-600">جاري التحقق...</p>
+      </div>
+    </div>
+  )
+}
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
