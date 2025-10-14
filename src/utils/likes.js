@@ -59,8 +59,9 @@ export const checkLike = async (userId, adId) => {
       .select('id')
       .eq('user_id', userId)
       .eq('ad_id', adId)
-      .single();
-
+      .single()
+	  .maybeSingle();  
+	  
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
       throw error;
     }

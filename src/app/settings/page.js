@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from '../../../lib/supabase';
+import { createClient } from "../../../lib/supabase";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Edit3, LogOut, X, ChevronLeft } from "lucide-react";
@@ -19,8 +19,11 @@ export default function SettingsPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-        
+        const {
+          data: { user: currentUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
         if (authError || !currentUser) {
           router.push("/");
           return;
@@ -62,6 +65,19 @@ export default function SettingsPage() {
   };
 
 
+  // عرض شاشة تحميل إذا كان loading أو user غير موجود
+  if (loading || !user) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">جاري التحميل...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -69,7 +85,9 @@ export default function SettingsPage() {
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-sm w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">تسجيل الخروج</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              تسجيل الخروج
+            </h3>
             <p className="text-gray-600 mb-6">هل أنت متأكد من تسجيل الخروج؟</p>
             <div className="flex gap-3">
               <button
@@ -104,7 +122,9 @@ export default function SettingsPage() {
             <div className="w-full flex items-center justify-between p-4 bg-gray-100 border-r-4 border-blue-500">
               <div className="flex items-center gap-3">
                 <Edit3 className="w-5 h-5 text-gray-600" />
-                <span className="font-medium text-gray-900">تحرير الملف الشخصي</span>
+                <span className="font-medium text-gray-900">
+                  تحرير الملف الشخصي
+                </span>
               </div>
               <ChevronLeft className="w-5 h-5 text-gray-400" />
             </div>
@@ -152,7 +172,9 @@ export default function SettingsPage() {
               >
                 <div className="flex items-center gap-3">
                   <Edit3 className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">تحرير الملف الشخصي</span>
+                  <span className="font-medium text-gray-900">
+                    تحرير الملف الشخصي
+                  </span>
                 </div>
                 <ChevronLeft className="w-5 h-5 text-gray-400" />
               </button>
@@ -179,7 +201,9 @@ export default function SettingsPage() {
               >
                 <X className="w-6 h-6" />
               </button>
-              <h2 className="text-lg font-bold text-gray-900">تحرير الملف الشخصي</h2>
+              <h2 className="text-lg font-bold text-gray-900">
+                تحرير الملف الشخصي
+              </h2>
               <div className="w-10"></div>
             </div>
 

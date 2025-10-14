@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import EditProductForm from "@/app/components/EditProductForm";
 import AppLayout from "@/app/components/AppLayout";
 import Image from 'next/image';
+
+
 import {
   Package,
   Eye,
@@ -34,119 +36,100 @@ export default function Dashboard() {
 
   // التحقق من المصادقة وجلب الملف الشخصي
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchProfile  = async () => {
       try {
         const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-        
-        if (authError || !currentUser) {
-          router.push("/auth");
-          return;
-        }
-
         // جلب الملف الشخصي (بدون إنشاء - الـ Trigger يتكفل بذلك)
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", currentUser.id)
           .single();
-
-        if (profileError) {
-          console.error("Profile fetch error:", profileError);
-          // في حال عدم وجود profile، إعادة توجيه للإعدادات
-          if (profileError.code === "PGRST116") {
-            router.push("/settings");
-            return;
-          }
-        }
-
         setUser(profile);
       } catch (error) {
-        console.error("Auth check error:", error);
-        router.push("/auth");
+        console.error("Profile fetch unexpected error:", error);
       }
     };
-
-    checkAuth();
-  }, [router]);
+    fetchProfile ();
+  }, [router,supabase]);
 
   // جلب منتجات المستخدم
   useEffect(() => {
-    const fetchMyAds = async () => {
-      if (!user) return;
+const fetchMyAds = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    // استدعاء الدالة بدون تمرير user.id
+    const { data, error } = await supabase.rpc("get_my_ads");
+    if (error) throw error;
+    setMyAds(data || []);
 
-      try {
-        setLoading(true);
-        setError(null);
+    // حساب الإحصائيات
+    const total = data?.length || 0;
+    const active = data?.filter(ad => ad.status === "active").length || 0;
+    const expired = data?.filter(ad => ad.status === "expired").length || 0;
 
-        const { data, error: fetchError } = await supabase
-          .from("ads")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+    setStats({ total, active, expired });
 
-        if (fetchError) throw fetchError;
-
-        setMyAds(data || []);
-
-        // حساب الإحصائيات
-        const total = data?.length || 0;
-        const active = data?.filter((ad) => ad.status === "active").length || 0;
-        const expired = data?.filter((ad) => ad.status === "expired").length || 0;
-
-        setStats({ total, active, expired });
-      } catch (err) {
-        console.error("Error fetching ads:", err);
-        setError("حدث خطأ في تحميل منتجاتك");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  } catch (err) {
+    console.error("Error fetching ads:", err);
+    setError("حدث خطأ في تحميل منتجاتك");
+  } finally {
+    setLoading(false);
+  }
+};
     fetchMyAds();
-  }, [user]);
+  }, [user, supabase]);
+  
+const extractFileName = (imageUrl) => {
+  // نبحث عن الجزء بعد "product-images/"
+  const parts = imageUrl.split("product-images/");
+  return parts.length > 1 ? parts[1] : null;
+};
 
-  // حذف منتج
-  const handleDeleteProduct = async (productId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
+const handleDeleteProduct = async (adId, imagePath) => {
+  if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
 
-    try {
-      // حذف الصور أولاً من Storage
-      const product = myAds.find(ad => ad.id === productId);
-      if (product?.image_urls?.length > 0) {
-        const imagePaths = product.image_urls.map(url => {
-          const urlObj = new URL(url);
-          return urlObj.pathname.split('/').pop();
-        });
+	
+  try {
+    // 1. حذف الإعلان من جدول ads
+    const { error: deleteError } = await supabase
+      .from('ads')
+      .delete()
+      .eq('id', adId)
+      .eq('user_id', user.id); // تأكد من أنه مالك الإعلان
 
-        await supabase.storage
-          .from('product-images')
-          .remove(imagePaths);
-      }
-
-      // حذف المنتج
-      const { error } = await supabase
-        .from("ads")
-        .delete()
-        .eq("id", productId)
-        .eq("user_id", user.id); // RLS Protection
-
-      if (error) throw error;
-
-      // تحديث الحالة المحلية
-      setMyAds((prev) => prev.filter((ad) => ad.id !== productId));
-      setStats((prev) => ({
-        ...prev,
-        total: prev.total - 1,
-        active: prev.active - (product.status === "active" ? 1 : 0),
-        expired: prev.expired - (product.status === "expired" ? 1 : 0),
-      }));
-
-      showSuccessMessage("تم حذف المنتج بنجاح");
-    } catch (err) {
-      console.error("Error deleting product:", err);
-      alert("حدث خطأ في حذف المنتج");
+    if (deleteError) {
+      console.error('خطأ في حذف الإعلان:', deleteError);
+      alert('فشل حذف الإعلان: ' + deleteError.message);
+      return;
     }
-  };
+
+    // 2. حذف الصورة من Storage
+    if (imagePath) {
+	const fileName = extractFileName(imagePath);
+      // مثال على imagePath: "138324dc-73e6-43ee-a911-a4d0dd56eaa9.jpg"
+      const { error: imageError } = await supabase.storage
+        .from('product-images')
+        .remove([fileName]);
+
+      if (imageError) {
+        console.error('خطأ في حذف الصورة من التخزين:', imageError);
+        alert('تم حذف الإعلان، لكن لم يتم حذف الصورة من التخزين.');
+      } else {
+        console.log('✅ تم حذف الصورة من التخزين بنجاح');
+      }
+    }
+
+    // 3. إعلام المستخدم بالنجاح
+    alert('تم حذف الإعلان بنجاح ✅');
+    router.push('/main');
+
+  } catch (err) {
+    console.error('❌ خطأ غير متوقع:', err);
+    alert('حدث خطأ غير متوقع أثناء حذف الإعلان');
+  }
+};
 
   // تحديث منتج
   const handleProductUpdated = (updatedProduct) => {
@@ -245,13 +228,14 @@ export default function Dashboard() {
         {/* User Info Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-200">
           <div className="flex items-center gap-4">
-            <Image
-              src={user.avatar_url || "/avatar.svg"}
-              alt="صورة المستخدم"
-              width={64}
-              height={64}
-              className="rounded-full border-2 border-red-500 object-cover"
-            />
+ <Image
+  src={user.avatar_url || "/avatar.svg"}
+  alt={user.full_name || "Avatar"}
+  width={64}
+  height={64}
+  className="rounded-full border border-gray-300 object-cover w-14 h-14"
+  priority
+/>
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-bold text-gray-900 truncate">
                 {user.full_name || "مستخدم جديد"}
@@ -454,7 +438,7 @@ export default function Dashboard() {
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDeleteProduct(product.id)}
+                              onClick={() => handleDeleteProduct(product.id, product.image_urls[0])}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="حذف"
                             >

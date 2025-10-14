@@ -7,24 +7,42 @@ import { useRouter } from "next/navigation";
 import { Upload, Camera, FileImage, X } from "lucide-react";
 import AppLayout from "../components/AppLayout";
 import Image from 'next/image';
+import { compressImage } from '@/utils/compressImage';
 
-// ثوابت الـ Validation
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-const MAX_TITLE_LENGTH = 100;
-const MAX_DESC_LENGTH = 1000;
-const MIN_PRICE = 0;
-const MAX_PRICE = 999999999;
+// ثوابت التحقق
+const VALIDATION = {
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+  ALLOWED_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  MAX_TITLE: 100,
+  MAX_DESC: 1000,
+  MIN_PRICE: 0,
+  MAX_PRICE: 999999999,
+};
+
+const SYRIAN_GOVERNORATES = [
+  "دمشق", "ريف دمشق", "حلب", "حمص", "حماة", "إدلب",
+  "اللاذقية", "طرطوس", "درعا", "السويداء", "القنيطرة",
+  "دير الزور", "الرقة", "الحسكة"
+];
+
+// ✅ دالة آمنة لتوليد UUID - تعمل على جميع المتصفحات
+function generateSafeUUID() {
+  // محاولة استخدام crypto.randomUUID إذا كان متاحاً
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // بديل آمن يعمل على المتصفحات القديمة
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 export default function AddProductPage() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
-
-  const syrianGovernorates = [
-    "دمشق", "ريف دمشق", "حلب", "حمص", "حماة", "إدلب",
-    "اللاذقية", "طرطوس", "درعا", "السويداء", "القنيطرة",
-    "دير الزور", "الرقة", "الحسكة"
-  ];
 
   const [formData, setFormData] = useState({
     title: "",
@@ -39,68 +57,66 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
 
+  // تحديث حقل واحد
   const updateField = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (errors.length > 0) setErrors([]);
   };
 
-  // ✅ Validation آمن للصور
-  const validateImage = (file) => {
-    const errors = [];
-
-    if (!file) {
-      errors.push("يجب اختيار صورة");
-      return errors;
-    }
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      errors.push("نوع الملف غير مدعوم. استخدم: JPG, PNG, WEBP");
-      return errors;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      errors.push(`حجم الملف كبير جداً. الحد الأقصى ${MAX_FILE_SIZE / 1024 / 1024}MB`);
-      return errors;
-    }
-
-    return errors;
+  // عرض رسالة خطأ
+  const showError = (message) => {
+    setErrors([message]);
+    setTimeout(() => setErrors([]), 5000);
   };
 
+  // التحقق من الصورة
+  const validateImage = (file) => {
+    if (!file) return "يجب اختيار صورة";
+    
+    if (!VALIDATION.ALLOWED_TYPES.includes(file.type)) {
+      return "نوع الملف غير مدعوم. استخدم: JPG, PNG, WEBP";
+    }
+    
+    if (file.size > VALIDATION.MAX_FILE_SIZE) {
+      return `حجم الملف كبير جداً. الحد الأقصى ${VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB`;
+    }
+    
+    return null;
+  };
+
+  // تغيير الصورة
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validationErrors = validateImage(file);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      setTimeout(() => setErrors([]), 5000);
+    const error = validateImage(file);
+    if (error) {
+      showError(error);
       return;
     }
 
     setImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result);
-    reader.onerror = () => {
-      setErrors(["فشل في قراءة الصورة"]);
-      setTimeout(() => setErrors([]), 5000);
-    };
+    reader.onerror = () => showError("فشل في قراءة الصورة");
     reader.readAsDataURL(file);
   };
 
+  // إزالة الصورة
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
   };
 
-  // ✅ رفع آمن مع تنظيف اسم الملف
+  // رفع الصورة
   const uploadImage = async (file) => {
-    const fileExt = file.name.split(".").pop().toLowerCase();
-    // إنشاء اسم آمن بدون محارف خطرة
-    const safeName = `${crypto.randomUUID()}.${fileExt}`;
+    const compressedFile = await compressImage(file, 800, 0.7);
+    const fileExt = compressedFile.name.split(".").pop().toLowerCase();
+    const safeName = `${generateSafeUUID()}.${fileExt}`;
 
     const { error } = await supabase.storage
       .from("product-images")
-      .upload(safeName, file, {
+      .upload(safeName, compressedFile, {
         cacheControl: "3600",
         upsert: false,
       });
@@ -114,63 +130,55 @@ export default function AddProductPage() {
     return { url: publicUrl, fileName: safeName };
   };
 
-  // ✅ حذف الصورة في حالة الفشل
+  // حذف الصورة
   const deleteImage = async (fileName) => {
     try {
       await supabase.storage.from("product-images").remove([fileName]);
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error("Failed to cleanup image:", err);
-      }
+      console.error("Failed to cleanup image:", err);
     }
   };
 
-  // ✅ Validation شامل
+  // التحقق من النموذج
   const validateForm = () => {
     const errors = [];
 
-    if (!imageFile) {
-      errors.push("يجب اختيار صورة للمنتج");
-    }
+    if (!imageFile) errors.push("يجب اختيار صورة للمنتج");
 
     const title = formData.title.trim();
     if (!title) {
       errors.push("يجب إدخال عنوان المنتج");
-    } else if (title.length > MAX_TITLE_LENGTH) {
-      errors.push(`العنوان طويل جداً (الحد الأقصى ${MAX_TITLE_LENGTH} حرف)`);
+    } else if (title.length > VALIDATION.MAX_TITLE) {
+      errors.push(`العنوان طويل جداً (الحد الأقصى ${VALIDATION.MAX_TITLE} حرف)`);
     }
 
     const desc = formData.description.trim();
     if (!desc) {
       errors.push("يجب إدخال وصف المنتج");
-    } else if (desc.length > MAX_DESC_LENGTH) {
-      errors.push(`الوصف طويل جداً (الحد الأقصى ${MAX_DESC_LENGTH} حرف)`);
+    } else if (desc.length > VALIDATION.MAX_DESC) {
+      errors.push(`الوصف طويل جداً (الحد الأقصى ${VALIDATION.MAX_DESC} حرف)`);
     }
 
     const price = parseFloat(formData.price);
-    if (!formData.price || isNaN(price) || price <= MIN_PRICE) {
+    if (!formData.price || isNaN(price) || price <= VALIDATION.MIN_PRICE) {
       errors.push("يجب إدخال سعر صحيح");
-    } else if (price > MAX_PRICE) {
+    } else if (price > VALIDATION.MAX_PRICE) {
       errors.push("السعر كبير جداً");
     }
 
-    if (!formData.category) {
-      errors.push("يجب اختيار فئة");
-    }
-
-    if (!formData.location) {
-      errors.push("يجب اختيار الموقع");
-    }
+    if (!formData.category) errors.push("يجب اختيار فئة");
+    if (!formData.location) errors.push("يجب اختيار الموقع");
 
     return errors;
   };
 
+  // إضافة المنتج
   const handleAddProduct = async () => {
     try {
       setLoading(true);
       setErrors([]);
 
-      // ✅ Validation قبل أي عملية
+      // التحقق من النموذج
       const validationErrors = validateForm();
       if (validationErrors.length > 0) {
         setErrors(validationErrors);
@@ -178,26 +186,26 @@ export default function AddProductPage() {
         return;
       }
 
-      // ✅ التحقق من المستخدم
+      // التحقق من المستخدم
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) {
         throw new Error("يجب تسجيل الدخول أولاً");
       }
 
-      // ✅ رفع الصورة
+      // رفع الصورة
       const { url: imageUrl, fileName } = await uploadImage(imageFile);
 
-      // ✅ حساب تاريخ الانتهاء
+      // حساب تاريخ الانتهاء
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
 
-      // ✅ إدخال البيانات مع معالجة الأخطاء
+      // إدخال البيانات
       const { error: dbError } = await supabase
         .from("ads")
         .insert({
           user_id: user.id,
-          title: formData.title.trim().substring(0, MAX_TITLE_LENGTH),
-          description: formData.description.trim().substring(0, MAX_DESC_LENGTH),
+          title: formData.title.trim().substring(0, VALIDATION.MAX_TITLE),
+          description: formData.description.trim().substring(0, VALIDATION.MAX_DESC),
           price: parseFloat(formData.price),
           currency: "ل.س",
           category: formData.category,
@@ -208,19 +216,14 @@ export default function AddProductPage() {
         });
 
       if (dbError) {
-        // ✅ حذف الصورة إذا فشل الإدخال
         await deleteImage(fileName);
         throw new Error("فشل في إضافة المنتج");
       }
 
-      // ✅ التوجيه الآمن
-      router.replace("/main");
+      router.replace("/dashboard");
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error("Error adding product:", error);
-      }
-      setErrors([error.message || "حدث خطأ أثناء إضافة المنتج"]);
-      setTimeout(() => setErrors([]), 5000);
+      console.error("Error adding product:", error);
+      showError(error.message || "حدث خطأ أثناء إضافة المنتج");
     } finally {
       setLoading(false);
     }
@@ -232,7 +235,7 @@ export default function AddProductPage() {
         <h1 className="text-2xl font-bold text-gray-900 mb-8">إنشاء منشور</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Side - Image Upload */}
+          {/* قسم الصورة */}
           <div className="space-y-4">
             <div className="relative">
               {imagePreview ? (
@@ -258,7 +261,7 @@ export default function AddProductPage() {
                     اختر ملفاً أو اسحبه وأفلته هنا
                   </p>
                   <p className="text-sm text-gray-500 text-center px-4">
-                    JPG, PNG, WEBP أقل من {MAX_FILE_SIZE / 1024 / 1024}MB
+                    JPG, PNG, WEBP أقل من {VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB
                   </p>
                 </div>
               )}
@@ -296,7 +299,7 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          {/* Right Side - Form Fields */}
+          {/* قسم النموذج */}
           <div className="space-y-6">
             {errors.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4" role="alert">
@@ -318,7 +321,7 @@ export default function AddProductPage() {
                 placeholder="إضافة عنوان"
                 value={formData.title}
                 onChange={(e) => updateField("title", e.target.value)}
-                maxLength={MAX_TITLE_LENGTH}
+                maxLength={VALIDATION.MAX_TITLE}
                 className="w-full p-4 border border-gray-200 rounded-xl focus:border-red-500 focus:outline-none transition-colors"
                 disabled={loading}
               />
@@ -334,7 +337,7 @@ export default function AddProductPage() {
                 rows="4"
                 value={formData.description}
                 onChange={(e) => updateField("description", e.target.value)}
-                maxLength={MAX_DESC_LENGTH}
+                maxLength={VALIDATION.MAX_DESC}
                 className="w-full p-4 border border-gray-200 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors"
                 disabled={loading}
               />
@@ -348,8 +351,8 @@ export default function AddProductPage() {
                 id="price"
                 type="number"
                 placeholder="0"
-                min={MIN_PRICE}
-                max={MAX_PRICE}
+                min={VALIDATION.MIN_PRICE}
+                max={VALIDATION.MAX_PRICE}
                 step="0.01"
                 value={formData.price}
                 onChange={(e) => updateField("price", e.target.value)}
@@ -391,7 +394,7 @@ export default function AddProductPage() {
                 disabled={loading}
               >
                 <option value="">اختر الموقع</option>
-                {syrianGovernorates.map((province) => (
+                {SYRIAN_GOVERNORATES.map((province) => (
                   <option key={province} value={province}>
                     {province}
                   </option>

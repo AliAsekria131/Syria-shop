@@ -7,26 +7,20 @@ import { useRouter, usePathname } from "next/navigation";
 import Image from 'next/image';
 import { Home, Search, Plus, Settings, ChevronDown, LogOut, PlusCircle, Heart, User } from "lucide-react";
 
-// ✅ قائمة بيضاء للمسارات المسموح بها
-const ALLOWED_ROUTES = [
-  '/main',
-  '/search',
-  '/add-product',
-  '/favorites',
-  '/dashboard',
-  '/settings',
-  '/product'
-];
+import MessagesIcon from './MessagesIcon';
+import MessageToast from './MessageToast';
 
 export default function AppLayout({ children }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const pathname = usePathname();
   
-  const [user, setUser] = useState(null);
+ 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [searchInputValue, setSearchInputValue] = useState("");
+  
+  const [user, setUser] = useState(null);
   const [authError, setAuthError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,14 +34,11 @@ export default function AppLayout({ children }) {
         
         if (!mounted) return;
 
-        if (error || !authUser) {
-          if (process.env.NODE_ENV === 'development') {
+        if (error) {
             console.error("Auth error:", error?.message);
-          }
-          router.replace("/auth");
           return;
         }
-
+		
         const { data: userProfile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -62,7 +53,7 @@ export default function AppLayout({ children }) {
           }
         }
 
-        setUser(userProfile || authUser);
+        setUser(userProfile);
         setIsLoading(false);
       } catch (err) {
         if (!mounted) return;
@@ -75,7 +66,8 @@ export default function AppLayout({ children }) {
     };
 
     checkAuth();
-
+	
+	
     return () => {
       mounted = false;
     };
@@ -95,14 +87,6 @@ export default function AppLayout({ children }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showUserMenu, showSettingsMenu]);
-/////////////////////////////////////
-  // ✅ دالة آمنة للتوجيه
-  const safeNavigate = useCallback((path) => {
-    const isAllowed = ALLOWED_ROUTES.some(route => path.startsWith(route));
-    if (isAllowed && path.startsWith('/')) {
-      router.push(path);
-    }
-  }, [router]);
 /////////////////////////////////////
   // ✅ معالجة البحث بشكل آمن
   const handleSearch = useCallback((e) => {
@@ -152,7 +136,6 @@ export default function AppLayout({ children }) {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحقق من المصادقة...</p>
         </div>
       </div>
     );
@@ -164,7 +147,7 @@ export default function AppLayout({ children }) {
       <div className="hidden md:block fixed right-0 top-0 h-full w-20 bg-white border-l border-gray-200 z-50">
         <div className="flex flex-col items-center py-6 h-full">
           <button 
-            onClick={() => safeNavigate("/main")} 
+            onClick={() => router.push("/main")} 
             className="mb-8"
             aria-label="الصفحة الرئيسية"
           >
@@ -180,7 +163,7 @@ export default function AppLayout({ children }) {
           
           <nav className="flex flex-col gap-4 mb-auto" aria-label="القائمة الرئيسية">
             <button
-              onClick={() => safeNavigate("/main")}
+              onClick={() =>  router.push("/main")}
               className={`p-3 rounded-xl transition-colors ${
                 isActive("/main") 
                   ? "bg-gray-100 text-black" 
@@ -193,7 +176,7 @@ export default function AppLayout({ children }) {
             </button>
             
             <button
-              onClick={() => safeNavigate("/search")}
+              onClick={() => router.push("/search")}
               className={`p-3 rounded-xl transition-colors ${
                 isActive("/search") 
                   ? "bg-gray-100 text-black" 
@@ -206,7 +189,7 @@ export default function AppLayout({ children }) {
             </button>
             
             <button
-              onClick={() => safeNavigate("/add-product")}
+              onClick={() => router.push("/add-product")}
               className={`p-3 rounded-xl transition-colors ${
                 isActive("/add-product") 
                   ? "bg-gray-100 text-black" 
@@ -219,7 +202,7 @@ export default function AppLayout({ children }) {
             </button>
             
             <button
-              onClick={() => safeNavigate("/favorites")}
+              onClick={() => router.push("/favorites")}
               className={`p-3 rounded-xl transition-colors ${
                 isActive("/favorites") 
                   ? "bg-gray-100 text-black" 
@@ -230,6 +213,10 @@ export default function AppLayout({ children }) {
             >
               <Heart className="w-6 h-6" />
             </button>
+			
+
+      
+    
           </nav>
           
           <div className="relative settings-menu-container">
@@ -246,7 +233,7 @@ export default function AppLayout({ children }) {
               <div className="absolute right-0 bottom-16 w-80 bg-white rounded-xl shadow-lg border py-2 z-50">
                 <button
                   onClick={() => {
-                    safeNavigate("/settings");
+                    router.push("/settings");
                     setShowSettingsMenu(false);
                   }}
                   className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
@@ -279,35 +266,37 @@ export default function AppLayout({ children }) {
                 />
               </form>
               
-              <div className="flex relative user-menu-container gap-1">
+              <div className="flex relative user-menu-container gap-1 items-center">
                 <button 
-                  onClick={() => safeNavigate("/dashboard")}
+                  onClick={() => router.push("/dashboard")}
                   aria-label="الملف الشخصي"
+                  className="focus:outline-none"
                 >
                   <Image
                     src={user.avatar_url || "/avatar.svg"}
                     alt="صورة المستخدم"
                     width={40}
                     height={40}
-                    className="rounded-full border-2 border-gray-200 object-cover"
-                    onError={(e) => { e.target.src = "/avatar.svg"; }}
+                    className="rounded-full border-2 border-gray-200 object-cover w-10 h-10 hover:opacity-90 transition-opacity"
+                    priority
                   />
                 </button>
                 
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-2 rounded-2xl hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2 p-2 rounded-2xl hover:bg-gray-100 transition-colors focus:outline-none"
                   aria-label="قائمة المستخدم"
                   aria-expanded={showUserMenu}
                 >
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
+				<ChevronDown className="w-4 h-4 text-gray-600" />
+				  
                 </button>
                 
                 {showUserMenu && (
-                  <div className="absolute left-0 top-12 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
+                  <div className="absolute left-0 top-12 w-48 bg-white rounded-xl shadow-lg border py-2 z-50 text-right">
                     <button
                       onClick={() => {
-                        safeNavigate("/dashboard");
+                        router.push("/dashboard");
                         setShowUserMenu(false);
                       }}
                       className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
@@ -320,7 +309,7 @@ export default function AppLayout({ children }) {
                     
                     <button
                       onClick={handleSignOut}
-                      className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3 text-red-600"
+                      className="w-full px-4 py-3 text-right hover:bg-gray-50 transition-colors flex items-center gap-3 text-red-600 font-medium"
                     >
                       <LogOut className="w-5 h-5" />
                       <span>تسجيل الخروج</span>
@@ -330,6 +319,7 @@ export default function AppLayout({ children }) {
               </div>
             </div>
           </div>
+		  <MessagesIcon currentUser={user} />
         </header>
         
         <main>{children}</main>
@@ -342,7 +332,7 @@ export default function AppLayout({ children }) {
       >
         <div className="flex items-center justify-around h-full">
           <button
-            onClick={() => safeNavigate("/main")}
+            onClick={() => router.push("/main")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
               isActive("/main") 
                 ? "bg-[#3f47cc] text-white" 
@@ -355,7 +345,7 @@ export default function AppLayout({ children }) {
           </button>
           
           <button
-            onClick={() => safeNavigate("/search")}
+            onClick={() => router.push("/search")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
               isActive("/search") 
                 ? "bg-[#3f47cc] text-white" 
@@ -368,7 +358,7 @@ export default function AppLayout({ children }) {
           </button>
           
           <button
-            onClick={() => safeNavigate("/add-product")}
+            onClick={() => router.push("/add-product")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg ${
               isActive("/add-product") 
                 ? "bg-[#3f47cc] text-white" 
@@ -381,7 +371,7 @@ export default function AppLayout({ children }) {
           </button>
           
           <button
-            onClick={() => safeNavigate("/favorites")}
+            onClick={() => router.push("/favorites")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
               isActive("/favorites") 
                 ? "bg-[#3f47cc] text-white" 
@@ -394,7 +384,7 @@ export default function AppLayout({ children }) {
           </button>
           
           <button
-            onClick={() => safeNavigate("/dashboard")}
+            onClick={() => router.push("/dashboard")}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
               isActive("/dashboard") 
                 ? "bg-[#3f47cc] text-white border border-[#3f47cc]" 
@@ -406,7 +396,11 @@ export default function AppLayout({ children }) {
             <User className="w-5 h-5" />
           </button>
         </div>
+		<MessagesIcon currentUser={user} isMobile={true} />
       </nav>
+	  
+	  <MessageToast currentUser={user} />
+	  
       
       {/* Mobile Navigation Spacer */}
       <div className="md:hidden h-20" aria-hidden="true"></div>

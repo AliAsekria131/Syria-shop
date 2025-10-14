@@ -2,19 +2,21 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-  import Image from 'next/image';
+import Image from "next/image";
+
 export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
-	const router = useRouter();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: user.full_name || "",
     phone: user.phone || "",
     location: user.location || "",
   });
   const [avatarFile, setAvatarFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(user.avatar_url || "/avatar.svg");
+  const [previewUrl, setPreviewUrl] = useState(
+    user.avatar_url || "/avatar.svg"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
 
   const syrianGovernorates = [
     "دمشق",
@@ -35,23 +37,23 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
 
   const uploadAvatar = async (file) => {
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`;
-      
+
       const { error } = await supabase.storage
-        .from('avatars')
+        .from("avatars")
         .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
+          cacheControl: "3600",
+          upsert: false,
         });
 
       if (error) {
         throw new Error(error.message || "فشل في رفع الصورة");
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(fileName);
 
       return publicUrl;
     } catch (error) {
@@ -59,14 +61,40 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
     }
   };
 
+// استخراج اسم الافتار القديم
+const extractFileName = (oldAvatar) => {
+  // نبحث عن الجزء بعد "product-images/"
+  const parts = oldAvatar.split("avatars/");
+  return parts.length > 1 ? parts[1] : null;
+};
+		// حذف الافتار القديم
+	  const deleteOldAvatar = async (oldAvatar) => {
+    if (oldAvatar) {
+	const fileName = extractFileName(oldAvatar);
+      // مثال على imagePath: "138324dc-73e6-43ee-a911-a4d0dd56eaa9.jpg"
+      const { error: imageError } = await supabase.storage
+        .from('avatars')
+        .remove([fileName]);
+
+      if (imageError) {
+        console.error('خطأ في حذف الصورة من التخزين:', imageError);
+        alert('تم حذف الإعلان، لكن لم يتم حذف الصورة من التخزين.');
+      } else {
+        console.log('✅ تم حذف الصورة من التخزين بنجاح');
+      }
+    }
+
+	  };
+
   const handleSave = async () => {
     setLoading(true);
     setError("");
 
     try {
       let avatar_url = user.avatar_url;
-
+		deleteOldAvatar(user.avatar_url)
       if (avatarFile) {
+		  
         avatar_url = await uploadAvatar(avatarFile);
       }
 
@@ -127,15 +155,14 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
       )}
 
       <div className="flex flex-col items-center gap-3 mb-6">
-
-<Image
-  src={previewUrl || "/avatar.svg"} // طريقة أفضل للتعامل مع الصور الاحتياطية
-  alt="avatar preview"
-  width={96} // يجب تحديد العرض
-  height={96} // يجب تحديد الطول
-  className="w-24 h-24 rounded-full border-4 object-cover bg-white"
-  style={{ borderColor: "#1877F2" }}
-/>
+        <Image
+          src={previewUrl || "/avatar.svg"} // طريقة أفضل للتعامل مع الصور الاحتياطية
+          alt="avatar preview"
+          width={96} // يجب تحديد العرض
+          height={96} // يجب تحديد الطول
+          className="w-24 h-24 rounded-full border-4 object-cover bg-white"
+          style={{ borderColor: "#1877F2" }}
+        />
         <label className="cursor-pointer">
           <input
             type="file"
@@ -146,13 +173,13 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
           />
           <span
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              loading 
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+              loading
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                 : "hover:opacity-90 cursor-pointer"
             }`}
-            style={{ 
-              backgroundColor: loading ? "#E5E7EB" : "#E8F4FD", 
-              color: loading ? "#9CA3AF" : "#1877F2" 
+            style={{
+              backgroundColor: loading ? "#E5E7EB" : "#E8F4FD",
+              color: loading ? "#9CA3AF" : "#1877F2",
             }}
           >
             {loading ? "جاري الرفع..." : "تغيير الصورة"}
@@ -168,7 +195,9 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
           <input
             type="text"
             value={formData.fullName}
-            onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, fullName: e.target.value }))
+            }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="أدخل اسمك الكامل"
             disabled={loading}
@@ -182,7 +211,9 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
           <input
             type="text"
             value={formData.phone}
-            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, phone: e.target.value }))
+            }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="09XXXXXXXX"
             disabled={loading}
@@ -195,7 +226,9 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
           </label>
           <select
             value={formData.location}
-            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, location: e.target.value }))
+            }
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             disabled={loading}
           >
@@ -218,9 +251,9 @@ export default function ProfileEditForm({ user, onClose, onUpdate, supabase }) {
         >
           {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
         </button>
-<button onClick={() => router.push('/main')} className="flex-1 ...">
-  الرجوع للرئيسية
-</button>
+        <button onClick={() => router.push("/main")} className="flex-1 ...">
+          الرجوع للرئيسية
+        </button>
       </div>
     </div>
   );

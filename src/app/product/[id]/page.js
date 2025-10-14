@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import Comments from "../../components/Comments";
-import ContactButton from '../../components/ContactButton';
 
 import AppLayout from "../../components/AppLayout";
 
@@ -196,7 +195,6 @@ export default function ProductDetailsPage() {
         setLoading(false);
       }
     };
-
     fetchProductDetails();
   }, [currentUser, productId, supabase]);
 
@@ -292,6 +290,39 @@ export default function ProductDetailsPage() {
     e.target.alt = "صورة غير متاحة";
   };
 
+const startChat = async (seller_id) => {
+  // تحقق من أن المستخدم لا يحاول التحدث مع نفسه
+  if (seller_id === currentUser.id) {
+    alert("لا يمكنك بدء محادثة مع نفسك");
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('start_conversation', { 
+      seller_id: seller_id 
+    });
+    
+    if (error) {
+      console.error('خطأ في بدء المحادثة:', error);
+      alert('حدث خطأ في بدء المحادثة: ' + error.message);
+      return;
+    }
+    
+    console.log('تم إنشاء/جلب المحادثة:', data);
+    
+    if (data) {
+      router.push(`/chat/${data}`);
+    } else {
+      alert('لم يتم إرجاع معرّف المحادثة');
+    }
+  } catch (err) {
+    console.error('خطأ غير متوقع:', err);
+    alert('حدث خطأ غير متوقع');
+  }
+};
+
+
+
   // شاشة التحميل
   if (loading) {
     return (
@@ -376,6 +407,7 @@ export default function ProductDetailsPage() {
   className="object-contain"
   onError={handleImageError}
   sizes="(max-width: 768px) 100vw, 50vw"
+  priority
 />
                   </div>
 
@@ -453,18 +485,17 @@ export default function ProductDetailsPage() {
                 {/* Product Info */}
                 <div className="p-6">
                   {/* Contact Buttons */}
-                  <div className="contact-buttons flex gap-2 mb-4">
-                    {seller.phone && (
-                      <>
-                        <ContactButton type="whatsapp" value={seller.phone} />
-                        <ContactButton type="phone" value={seller.phone} />
-                        <ContactButton type="telegram" value={seller.phone} />
-                      </>
-                    )}
-                    {seller.email && (
-                      <ContactButton type="email" value={seller.email} />
-                    )}
-                  </div>
+<div className="contact-buttons flex gap-2 mb-4">
+  {!isOwner && (
+    <button 
+      onClick={() => startChat(seller.id)}
+      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+    >
+      <MessageCircle className="w-4 h-4" />
+      <span>مراسلة</span>
+    </button>
+  )}
+</div>
 
                   <h1 className="text-xl font-bold text-gray-900 mb-4">
                     {product.title}
@@ -597,6 +628,17 @@ export default function ProductDetailsPage() {
 
             {/* Mobile Action Buttons */}
             <div className="p-4 border-b border-gray-100">
+			<div className="contact-buttons flex gap-2 mb-4">
+  {!isOwner && (
+    <button 
+      onClick={() => startChat(seller.id)}
+      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+    >
+      <MessageCircle className="w-4 h-4" />
+      <span>مراسلة</span>
+    </button>
+  )}
+</div>
               <div className="flex items-center gap-2 mb-2">
 <Image
   src={seller?.avatar_url || "/avatar.svg"}
@@ -606,6 +648,7 @@ export default function ProductDetailsPage() {
   className="rounded-full object-cover bg-gray-100"
   onError={(e) => { e.target.src = "/avatar.svg"; }}
 />
+
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
                     {seller?.full_name || "البائع"}
@@ -613,6 +656,7 @@ export default function ProductDetailsPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
+			  
                 <div className="flex gap-3">
                   <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
                     <Share className="w-5 h-5 text-gray-600" />
@@ -653,19 +697,8 @@ export default function ProductDetailsPage() {
 
             {/* Product Info */}
             <div className="p-4">
+			
               {/* Contact Buttons */}
-              <div className="contact-buttons flex gap-2 mb-4">
-                {seller.phone && (
-                  <>
-                    <ContactButton type="whatsapp" value={seller.phone} />
-                    <ContactButton type="phone" value={seller.phone} />
-                    <ContactButton type="telegram" value={seller.phone} />
-                  </>
-                )}
-                {seller.email && (
-                  <ContactButton type="email" value={seller.email} />
-                )}
-              </div>
               <hr className="my-4 border-gray-200" />
 
               <h1 className="text-xl font-bold text-gray-900 mb-3">
