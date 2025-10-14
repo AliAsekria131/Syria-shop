@@ -35,6 +35,24 @@ export default function ChatPage() {
   };
   
   // أضف Realtime listener للرسائل الجديدة في المحادثة:
+  
+    // جلب الرسائل
+  const fetchMessages = async () => {
+    if (!conversationId) return;
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("خطأ في جلب الرسائل:", error);
+    } else {
+      setMessages(data || []);
+    }
+  };
+  
 
 useEffect(() => {
 scrollToBottom();	
@@ -173,24 +191,9 @@ useEffect(() => {
     };
 
     fetchConversation();
-  }, [currentUser, conversationId, supabase, router, fetchMessages]);
+  }, [currentUser, conversationId, supabase, router]);
 
-  // جلب الرسائل
-  const fetchMessages = async () => {
-    if (!conversationId) return;
 
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("خطأ في جلب الرسائل:", error);
-    } else {
-      setMessages(data || []);
-    }
-  };
 
   // الاشتراك في الرسائل الجديدة باستخدام Realtime
   useEffect(() => {
