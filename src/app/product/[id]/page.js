@@ -1,7 +1,7 @@
 // product/[id]/page.js
 "use client";
 
-import { createClient } from '../../../../lib/supabase';
+import { createClient } from "../../../../lib/supabase";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -40,9 +40,6 @@ export default function ProductDetailsPage() {
 
   const [isOwner, setIsOwner] = useState(false);
 
-
-
-
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showMobileComments, setShowMobileComments] = useState(false);
 
@@ -51,13 +48,12 @@ export default function ProductDetailsPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
 
-
   useEffect(() => {
     const checkAuth = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      
+
       if (!user) {
         router.push("/main");
         return;
@@ -290,38 +286,36 @@ export default function ProductDetailsPage() {
     e.target.alt = "صورة غير متاحة";
   };
 
-const startChat = async (seller_id) => {
-  // تحقق من أن المستخدم لا يحاول التحدث مع نفسه
-  if (seller_id === currentUser.id) {
-    alert("لا يمكنك بدء محادثة مع نفسك");
-    return;
-  }
-
-  try {
-    const { data, error } = await supabase.rpc('start_conversation', { 
-      seller_id: seller_id 
-    });
-    
-    if (error) {
-      console.error('خطأ في بدء المحادثة:', error);
-      alert('حدث خطأ في بدء المحادثة: ' + error.message);
+  const startChat = async (seller_id) => {
+    // تحقق من أن المستخدم لا يحاول التحدث مع نفسه
+    if (seller_id === currentUser.id) {
+      alert("لا يمكنك بدء محادثة مع نفسك");
       return;
     }
-    
-    console.log('تم إنشاء/جلب المحادثة:', data);
-    
-    if (data) {
-      router.push(`/chat/${data}`);
-    } else {
-      alert('لم يتم إرجاع معرّف المحادثة');
+
+    try {
+      const { data, error } = await supabase.rpc("start_conversation", {
+        seller_id: seller_id,
+      });
+
+      if (error) {
+        console.error("خطأ في بدء المحادثة:", error);
+        alert("حدث خطأ في بدء المحادثة: " + error.message);
+        return;
+      }
+
+      console.log("تم إنشاء/جلب المحادثة:", data);
+
+      if (data) {
+        router.push(`/chat/${data}`);
+      } else {
+        alert("لم يتم إرجاع معرّف المحادثة");
+      }
+    } catch (err) {
+      console.error("خطأ غير متوقع:", err);
+      alert("حدث خطأ غير متوقع");
     }
-  } catch (err) {
-    console.error('خطأ غير متوقع:', err);
-    alert('حدث خطأ غير متوقع');
-  }
-};
-
-
+  };
 
   // شاشة التحميل
   if (loading) {
@@ -400,15 +394,14 @@ const startChat = async (seller_id) => {
                     className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-4"
                     style={{ aspectRatio: "4/3" }}
                   >
-<Image
-  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-  alt={product.title}
-  fill
-  className="object-contain"
-  onError={handleImageError}
-  sizes="(max-width: 768px) 100vw, 50vw"
-  priority
-/>
+                    <Image
+                      src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+                      alt={product.title}
+                      fill
+                      className="object-cover rounded-2xl"
+                      onError={handleImageError}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
                   </div>
 
                   {/* Action Buttons */}
@@ -451,9 +444,7 @@ const startChat = async (seller_id) => {
                     >
                       <Heart
                         className={`w-5 h-5 ${
-                          isLiked
-                            ? "text-white fill-current"
-                            : "text-gray-700"
+                          isLiked ? "text-white fill-current" : "text-gray-700"
                         }`}
                       />
                     </button>
@@ -483,50 +474,19 @@ const startChat = async (seller_id) => {
                 </div>
 
                 {/* Product Info */}
-                <div className="p-6">
-                  {/* Contact Buttons */}
-<div className="contact-buttons flex gap-2 mb-4">
-  {!isOwner && (
-    <button 
-      onClick={() => startChat(seller.id)}
-      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
-    >
-      <MessageCircle className="w-4 h-4" />
-      <span>مراسلة</span>
-    </button>
-  )}
-</div>
-
-                  <h1 className="text-xl font-bold text-gray-900 mb-4">
-                    {product.title}
-                  </h1>
-
-                  {/* Horizontal Info Layout */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatPrice(product.price)} {product.currency}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin className="w-4 h-4" />
-                      <span>{product.location}</span>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                    {product.description}
-                  </p>
-
+                <div className="p-5 pt-0">
                   {/* Seller Info */}
                   <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-<Image
-  src={seller?.avatar_url || "/avatar.svg"}
-  alt="البائع"
-  width={32}
-  height={32}
-  className="rounded-full object-cover bg-gray-100"
-  onError={(e) => { e.target.src = "/avatar.svg"; }}
-/>
+                    <Image
+                      src={seller?.avatar_url || "/avatar.svg"}
+                      alt="البائع"
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover bg-gray-100"
+                      onError={(e) => {
+                        e.target.src = "/avatar.svg";
+                      }}
+                    />
                     <div>
                       <div className="text-sm font-semibold text-gray-900">
                         {seller?.full_name || "البائع"}
@@ -536,6 +496,36 @@ const startChat = async (seller_id) => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Contact Buttons */}
+                  <div className="contact-buttons flex gap-2 mb-4">
+                    {!isOwner && (
+                      <button
+                        onClick={() => startChat(seller.id)}
+                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>مراسلة</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mb-2 flex flex-row flex-wrap justify-between items-center">
+                    <h1 className="text-xl font-bold text-gray-900 mb-4">
+                      {product.title}
+                    </h1>
+                    <div className="text-2xl font-bold text-green-600">
+                      {formatPrice(product.price)} {product.currency}
+                    </div>
+                  </div>
+
+                  {/* Horizontal Info Layout */}
+                  <div className="flex items-center justify-between mb-4"></div>
+
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    {product.description}
+                  </p>
 
                   {/* Additional Info */}
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
@@ -543,9 +533,10 @@ const startChat = async (seller_id) => {
                       <Calendar className="w-4 h-4" />
                       {formatDate(product.created_at)}
                     </span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                      {product.category}
-                    </span>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <MapPin className="w-4 h-4" />
+                      <span>{product.location}</span>
+                    </div>
                   </div>
 
                   {/* Comments Section */}
@@ -568,22 +559,23 @@ const startChat = async (seller_id) => {
                   <div
                     key={relatedProduct.id}
                     className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
-                    onClick={() =>
-                      router.push(`/product/${relatedProduct.id}`)
-                    }
+                    onClick={() => router.push(`/product/${relatedProduct.id}`)}
                   >
                     <div
                       className="relative w-full bg-gray-100 flex items-center justify-center p-2"
                       style={{ aspectRatio: "1/1" }}
                     >
-<Image
-  src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
-  alt={relatedProduct.title}
-  fill
-  className="object-contain"
-  onError={handleImageError}
-  sizes="(max-width: 768px) 50vw, 25vw"
-/>
+                      <Image
+                        src={
+                          relatedProduct.image_urls?.[0] ||
+                          "/placeholder-image.jpg"
+                        }
+                        alt={relatedProduct.title}
+                        fill
+                        className="object-contain"
+                        onError={handleImageError}
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                      />
                     </div>
                     <div className="p-3">
                       <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
@@ -608,14 +600,14 @@ const startChat = async (seller_id) => {
             {/* Image */}
             <div className="relative p-3">
               <div className="relative w-full h-60 bg-gray-100 rounded-2xl flex items-center justify-center p-4">
-<Image
-  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-  alt={product.title}
-  fill
-  className="object-contain"
-  onError={handleImageError}
-  sizes="100vw"
-/>
+                <Image
+                  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+                  alt={product.title}
+                  fill
+                  className="object-contain"
+                  onError={handleImageError}
+                  sizes="100vw"
+                />
               </div>
 
               {/* Navigation Button */}
@@ -628,26 +620,28 @@ const startChat = async (seller_id) => {
 
             {/* Mobile Action Buttons */}
             <div className="p-4 border-b border-gray-100">
-			<div className="contact-buttons flex gap-2 mb-4">
-  {!isOwner && (
-    <button 
-      onClick={() => startChat(seller.id)}
-      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
-    >
-      <MessageCircle className="w-4 h-4" />
-      <span>مراسلة</span>
-    </button>
-  )}
-</div>
+              <div className="contact-buttons flex gap-2 mb-4">
+                {!isOwner && (
+                  <button
+                    onClick={() => startChat(seller.id)}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>مراسلة</span>
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-2 mb-2">
-<Image
-  src={seller?.avatar_url || "/avatar.svg"}
-  alt="البائع"
-  width={32}
-  height={32}
-  className="rounded-full object-cover bg-gray-100"
-  onError={(e) => { e.target.src = "/avatar.svg"; }}
-/>
+                <Image
+                  src={seller?.avatar_url || "/avatar.svg"}
+                  alt="البائع"
+                  width={32}
+                  height={32}
+                  className="rounded-full object-cover bg-gray-100"
+                  onError={(e) => {
+                    e.target.src = "/avatar.svg";
+                  }}
+                />
 
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
@@ -656,7 +650,6 @@ const startChat = async (seller_id) => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-			  
                 <div className="flex gap-3">
                   <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
                     <Share className="w-5 h-5 text-gray-600" />
@@ -671,16 +664,12 @@ const startChat = async (seller_id) => {
                     onClick={handleLike}
                     disabled={likeLoading}
                     className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all ${
-                      isLiked
-                        ? "border-red-500 bg-red-50"
-                        : "border-gray-300"
+                      isLiked ? "border-red-500 bg-red-50" : "border-gray-300"
                     } ${likeLoading ? "opacity-50" : ""}`}
                   >
                     <Heart
                       className={`w-5 h-5 ${
-                        isLiked
-                          ? "text-red-500 fill-current"
-                          : "text-gray-600"
+                        isLiked ? "text-red-500 fill-current" : "text-gray-600"
                       }`}
                     />
                     <span
@@ -697,7 +686,6 @@ const startChat = async (seller_id) => {
 
             {/* Product Info */}
             <div className="p-4">
-			
               {/* Contact Buttons */}
               <hr className="my-4 border-gray-200" />
 
@@ -732,14 +720,16 @@ const startChat = async (seller_id) => {
                   className="relative w-full bg-gray-100 flex items-center justify-center p-2"
                   style={{ aspectRatio: "1/1" }}
                 >
-<Image
-  src={relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"}
-  alt={relatedProduct.title}
-  fill
-  className="object-contain"
-  onError={handleImageError}
-  sizes="(max-width: 768px) 50vw, 25vw"
-/>
+                  <Image
+                    src={
+                      relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"
+                    }
+                    alt={relatedProduct.title}
+                    fill
+                    className="object-contain"
+                    onError={handleImageError}
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
                 </div>
                 <div className="p-3">
                   <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">

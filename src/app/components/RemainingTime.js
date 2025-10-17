@@ -1,6 +1,10 @@
 // components/RemainingTime.js
 'use client';
 import { useState, useEffect } from 'react';
+import {
+  Clock,
+} from "lucide-react";
+
 
 export default function RemainingTime({ expiresAt }) {
   const [timeLeft, setTimeLeft] = useState('');
@@ -26,7 +30,7 @@ export default function RemainingTime({ expiresAt }) {
         }
         setIsExpired(false);
       } else {
-        setTimeLeft('منتهي الصلاحية');
+        setTimeLeft('الاعلان منتهي الصلاحية سيتم حذفة في نهاية اليوم.');
         setIsExpired(true);
       }
     };
@@ -39,7 +43,8 @@ export default function RemainingTime({ expiresAt }) {
 
   return (
     <div className={`text-sm ${isExpired ? 'text-red-500' : 'text-gray-500'}`}>
-      ⏰ {timeLeft}
+      <Clock className="inline-block ml-1 mb-1 w-4 h-4" />
+      {timeLeft}
     </div>
   );
 }

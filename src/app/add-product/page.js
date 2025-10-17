@@ -57,7 +57,7 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
 
-  // تحديث حقل واحد
+   // تحديث حقل واحد
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors.length > 0) setErrors([]);
@@ -215,6 +215,16 @@ export default function AddProductPage() {
           expires_at: expiresAt.toISOString(),
         });
 
+		await fetch("/api/send-push", {
+  method: "POST",
+  body: JSON.stringify({
+    title: "🎉 منتج جديد!",
+    message: "تمت إضافة منتج جديد إلى المتجر.",
+  }),
+});
+
+		
+		
       if (dbError) {
         await deleteImage(fileName);
         throw new Error("فشل في إضافة المنتج");
@@ -263,6 +273,7 @@ export default function AddProductPage() {
                   <p className="text-sm text-gray-500 text-center px-4">
                     JPG, PNG, WEBP أقل من {VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB
                   </p>
+                
                 </div>
               )}
             </div>

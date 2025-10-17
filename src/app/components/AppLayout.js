@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Image from 'next/image';
 import { Home, Search, Plus, Settings, ChevronDown, LogOut, PlusCircle, Heart, User } from "lucide-react";
 
+
 import MessagesIcon from './MessagesIcon';
 import MessageToast from './MessageToast';
 
@@ -112,7 +113,6 @@ export default function AppLayout({ children }) {
   }, [supabase, router]);
 ///////////////////////////////////
   const isActive = useCallback((path) => pathname === path, [pathname]);
-
   // شاشة الخطأ
   if (authError) {
     return (
@@ -251,7 +251,7 @@ export default function AppLayout({ children }) {
       <div className="md:mr-20">
         {/* Desktop Header */}
         <header className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
-          <div className="px-6 py-4">
+          <div className="px-3 py-3">
             <div className="flex items-center gap-4">
               <form onSubmit={handleSearch} className="flex-1 relative">
                 <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
@@ -261,7 +261,7 @@ export default function AppLayout({ children }) {
                   value={searchInputValue}
                   onChange={(e) => setSearchInputValue(e.target.value)}
                   maxLength={100}
-                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
+                  className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
                   aria-label="البحث في المنتجات"
                 />
               </form>

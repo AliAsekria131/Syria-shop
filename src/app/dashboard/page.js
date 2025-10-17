@@ -1,12 +1,12 @@
 "use client";
 
-import { createClient } from '../../../lib/supabase';
+import { createClient } from "../../../lib/supabase";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import EditProductForm from "@/app/components/EditProductForm";
 import AppLayout from "@/app/components/AppLayout";
-import Image from 'next/image';
-
+import Image from "next/image";
+import RemainingTime from "../components/RemainingTime";
 
 import {
   Package,
@@ -21,7 +21,7 @@ import {
 export default function Dashboard() {
   const supabase = createClient();
   const router = useRouter();
-  
+
   const [user, setUser] = useState(null);
   const [myAds, setMyAds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,9 +36,12 @@ export default function Dashboard() {
 
   // التحقق من المصادقة وجلب الملف الشخصي
   useEffect(() => {
-    const fetchProfile  = async () => {
+    const fetchProfile = async () => {
       try {
-        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+        const {
+          data: { user: currentUser },
+          error: authError,
+        } = await supabase.auth.getUser();
         // جلب الملف الشخصي (بدون إنشاء - الـ Trigger يتكفل بذلك)
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
@@ -50,86 +53,84 @@ export default function Dashboard() {
         console.error("Profile fetch unexpected error:", error);
       }
     };
-    fetchProfile ();
-  }, [router,supabase]);
+    fetchProfile();
+  }, [router, supabase]);
 
   // جلب منتجات المستخدم
   useEffect(() => {
-const fetchMyAds = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    // استدعاء الدالة بدون تمرير user.id
-    const { data, error } = await supabase.rpc("get_my_ads");
-    if (error) throw error;
-    setMyAds(data || []);
+    const fetchMyAds = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // استدعاء الدالة بدون تمرير user.id
+        const { data, error } = await supabase.rpc("get_my_ads");
+        if (error) throw error;
+        setMyAds(data || []);
 
-    // حساب الإحصائيات
-    const total = data?.length || 0;
-    const active = data?.filter(ad => ad.status === "active").length || 0;
-    const expired = data?.filter(ad => ad.status === "expired").length || 0;
+        // حساب الإحصائيات
+        const total = data?.length || 0;
+        const active = data?.filter((ad) => ad.status === "active").length || 0;
+        const expired =
+          data?.filter((ad) => ad.status === "expired").length || 0;
 
-    setStats({ total, active, expired });
-
-  } catch (err) {
-    console.error("Error fetching ads:", err);
-    setError("حدث خطأ في تحميل منتجاتك");
-  } finally {
-    setLoading(false);
-  }
-};
+        setStats({ total, active, expired });
+      } catch (err) {
+        console.error("Error fetching ads:", err);
+        setError("حدث خطأ في تحميل منتجاتك");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchMyAds();
   }, [user, supabase]);
-  
-const extractFileName = (imageUrl) => {
-  // نبحث عن الجزء بعد "product-images/"
-  const parts = imageUrl.split("product-images/");
-  return parts.length > 1 ? parts[1] : null;
-};
 
-const handleDeleteProduct = async (adId, imagePath) => {
-  if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
+  const extractFileName = (imageUrl) => {
+    // نبحث عن الجزء بعد "product-images/"
+    const parts = imageUrl.split("product-images/");
+    return parts.length > 1 ? parts[1] : null;
+  };
 
-	
-  try {
-    // 1. حذف الإعلان من جدول ads
-    const { error: deleteError } = await supabase
-      .from('ads')
-      .delete()
-      .eq('id', adId)
-      .eq('user_id', user.id); // تأكد من أنه مالك الإعلان
+  const handleDeleteProduct = async (adId, imagePath) => {
+    if (!confirm("هل أنت متأكد من حذف هذا الإعلان؟")) return;
 
-    if (deleteError) {
-      console.error('خطأ في حذف الإعلان:', deleteError);
-      alert('فشل حذف الإعلان: ' + deleteError.message);
-      return;
-    }
+    try {
+      // 1. حذف الإعلان من جدول ads
+      const { error: deleteError } = await supabase
+        .from("ads")
+        .delete()
+        .eq("id", adId)
+        .eq("user_id", user.id); // تأكد من أنه مالك الإعلان
 
-    // 2. حذف الصورة من Storage
-    if (imagePath) {
-	const fileName = extractFileName(imagePath);
-      // مثال على imagePath: "138324dc-73e6-43ee-a911-a4d0dd56eaa9.jpg"
-      const { error: imageError } = await supabase.storage
-        .from('product-images')
-        .remove([fileName]);
-
-      if (imageError) {
-        console.error('خطأ في حذف الصورة من التخزين:', imageError);
-        alert('تم حذف الإعلان، لكن لم يتم حذف الصورة من التخزين.');
-      } else {
-        console.log('✅ تم حذف الصورة من التخزين بنجاح');
+      if (deleteError) {
+        console.error("خطأ في حذف الإعلان:", deleteError);
+        alert("فشل حذف الإعلان: " + deleteError.message);
+        return;
       }
+
+      // 2. حذف الصورة من Storage
+      if (imagePath) {
+        const fileName = extractFileName(imagePath);
+        // مثال على imagePath: "138324dc-73e6-43ee-a911-a4d0dd56eaa9.jpg"
+        const { error: imageError } = await supabase.storage
+          .from("product-images")
+          .remove([fileName]);
+
+        if (imageError) {
+          console.error("خطأ في حذف الصورة من التخزين:", imageError);
+          alert("تم حذف الإعلان، لكن لم يتم حذف الصورة من التخزين.");
+        } else {
+          console.log("✅ تم حذف الصورة من التخزين بنجاح");
+        }
+      }
+
+      // 3. إعلام المستخدم بالنجاح
+      alert("تم حذف الإعلان بنجاح ✅");
+      router.push("/main");
+    } catch (err) {
+      console.error("❌ خطأ غير متوقع:", err);
+      alert("حدث خطأ غير متوقع أثناء حذف الإعلان");
     }
-
-    // 3. إعلام المستخدم بالنجاح
-    alert('تم حذف الإعلان بنجاح ✅');
-    router.push('/main');
-
-  } catch (err) {
-    console.error('❌ خطأ غير متوقع:', err);
-    alert('حدث خطأ غير متوقع أثناء حذف الإعلان');
-  }
-};
+  };
 
   // تحديث منتج
   const handleProductUpdated = (updatedProduct) => {
@@ -174,16 +175,16 @@ const handleDeleteProduct = async (adId, imagePath) => {
   // حساب الوقت المتبقي
   const getRemainingTime = (expiresAt) => {
     if (!expiresAt) return null;
-    
+
     const now = new Date();
     const expiry = new Date(expiresAt);
     const diff = expiry - now;
-    
+
     if (diff <= 0) return "منتهي";
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) return `${days} يوم`;
     return `${hours} ساعة`;
   };
@@ -228,14 +229,14 @@ const handleDeleteProduct = async (adId, imagePath) => {
         {/* User Info Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-200">
           <div className="flex items-center gap-4">
- <Image
-  src={user.avatar_url || "/avatar.svg"}
-  alt={user.full_name || "Avatar"}
-  width={64}
-  height={64}
-  className="rounded-full border border-gray-300 object-cover w-14 h-14"
-  priority
-/>
+            <Image
+              src={user.avatar_url || "/avatar.svg"}
+              alt={user.full_name || "Avatar"}
+              width={64}
+              height={64}
+              className="rounded-full border border-gray-300 object-cover w-14 h-14"
+              priority
+            />
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-bold text-gray-900 truncate">
                 {user.full_name || "مستخدم جديد"}
@@ -278,37 +279,6 @@ const handleDeleteProduct = async (adId, imagePath) => {
             </div>
           </div>
         )}
-
-        {/* Statistics */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 text-center">
-            <div className="w-8 h-8 rounded-lg mx-auto mb-2 bg-blue-100 flex items-center justify-center">
-              <Package className="w-5 h-5 text-blue-600" />
-            </div>
-            <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
-            <p className="text-sm text-gray-600">إجمالي</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 text-center">
-            <div className="w-8 h-8 rounded-lg mx-auto mb-2 bg-green-100 flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <p className="text-2xl font-bold text-green-600">{stats.active}</p>
-            <p className="text-sm text-gray-600">نشط</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 text-center">
-            <div className="w-8 h-8 rounded-lg mx-auto mb-2 bg-red-100 flex items-center justify-center">
-              <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <p className="text-2xl font-bold text-red-600">{stats.expired}</p>
-            <p className="text-sm text-gray-600">منتهي</p>
-          </div>
-        </div>
 
         {/* Products Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -369,7 +339,9 @@ const handleDeleteProduct = async (adId, imagePath) => {
                     <div className="flex gap-3">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex-shrink-0 overflow-hidden bg-gray-100 relative">
                         <Image
-                          src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+                          src={
+                            product.image_urls?.[0] || "/placeholder-image.jpg"
+                          }
                           alt={product.title}
                           fill
                           className="object-cover"
@@ -391,11 +363,6 @@ const handleDeleteProduct = async (adId, imagePath) => {
                             >
                               {product.status === "active" ? "نشط" : "منتهي"}
                             </span>
-                            {product.status === "active" && product.expires_at && (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-600">
-                                {getRemainingTime(product.expires_at)}
-                              </span>
-                            )}
                           </div>
                         </div>
 
@@ -408,12 +375,17 @@ const handleDeleteProduct = async (adId, imagePath) => {
                             {formatPrice(product.price)} {product.currency}
                           </span>
                         </div>
+                        <div className="mb-3">
+                          <RemainingTime expiresAt={product.expires_at} />
+                        </div>
 
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div className="flex gap-4 text-xs text-gray-500">
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
-                              <span className="truncate">{product.location}</span>
+                              <span className="truncate">
+                                {product.location}
+                              </span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -423,7 +395,9 @@ const handleDeleteProduct = async (adId, imagePath) => {
 
                           <div className="flex gap-2">
                             <button
-                              onClick={() => router.push(`/product/${product.id}`)}
+                              onClick={() =>
+                                router.push(`/product/${product.id}`)
+                              }
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="عرض"
                             >
@@ -438,7 +412,12 @@ const handleDeleteProduct = async (adId, imagePath) => {
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDeleteProduct(product.id, product.image_urls[0])}
+                              onClick={() =>
+                                handleDeleteProduct(
+                                  product.id,
+                                  product.image_urls[0]
+                                )
+                              }
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="حذف"
                             >
