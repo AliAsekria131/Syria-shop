@@ -88,6 +88,7 @@ export default function MainPage() {
       const { data, error } = await supabase.rpc("get_all_ads");
       if (error) throw error;
       setAds(data || []);
+      
     } catch (err) {
       console.error("❌ خطأ أثناء الجلب:", err);
       setError("فشل تحميل الإعلانات. حاول لاحقًا.");

@@ -7,8 +7,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Search, Filter, MapPin, Calendar } from "lucide-react";
 import AppLayout from "../components/AppLayout";
-import RemainingTime from "../components/RemainingTime";
 import UserProfileMenu from "../components/UserProfileMenu";
+import router from "next/router";
 
 import { useUser } from "../hooks/useUser";
 
@@ -124,7 +124,7 @@ function MobileFilterPanel({
   );
 }
 
-function ProductCard({ product, onClick }) {
+function ProductCard({ product }) {
   const formatPrice = (price) => new Intl.NumberFormat("ar-SY").format(price);
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("ar-SY", {
@@ -133,58 +133,74 @@ function ProductCard({ product, onClick }) {
       day: "numeric",
     });
   };
+
+  const router = useRouter();
   const handleImageError = (e) => {
     e.target.src = "/placeholder-image.jpg";
     e.target.alt = "صورة غير متاحة";
   };
-
   return (
     <div
-      className="p-2 bg-white rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 hover:shadow-md"
-      onClick={onClick}
+      key={product.id}
+      className="bg-white rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 hover:shadow-lg hover:border-red-400 flex flex-col"
+      onClick={() => router.push(`/product/${product.id}`)}
     >
-      <div className="relative">
-        <div
-          className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-2"
-          style={{ aspectRatio: "1/1" }}
-        >
-          <Image
-            src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-            alt={product.title}
-            fill
-            className="object-contain"
-            onError={handleImageError}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        </div>
-        <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+      <div className="relative p-2" style={{ aspectRatio: "7/6" }}>
+        <Image
+          src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+          alt={product.title}
+          fill
+          className="object-cover rounded-xl bg-gray-100"
+          onError={handleImageError}
+          sizes="(max-width: 640px) 60vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 20vw"
+          quality={75}
+        />
+        <div className="absolute top-4 right-4 bg-black bg-opacity-60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
           {product.category}
         </div>
       </div>
 
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-          {product.title}
-        </h3>
-
-        <div className="mb-3">
-          <RemainingTime expiresAt={product.expires_at} />
-        </div>
-
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-lg font-bold text-green-600">
-            {formatPrice(product.price)} {product.currency}
+        <div className="flex items-center mb-2">
+          <Image
+            src={product.avatar_url || "/avatar.svg"}
+            alt={product.full_name || "بائع مجهول"}
+            width={20}
+            height={20}
+            className="w-7 h-7 rounded-full object-cover bg-gray-200"
+            onError={handleImageError}
+            loading="lazy"
+          />
+          <span className="mr-2 truncate max-w-[120px]">
+            {product.full_name || "بائع مجهول"}
           </span>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            <span>{product.location}</span>
+        <div className="mb-2 flex flex-row flex-wrap justify-between items-center">
+          <div className="font-semibold text-lg overflow-hidden text-ellipsis">
+            {product.title}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between text-sm font-medium ml-2">
+            <span className="text-lg font-bold">
+              {formatPrice(product.price)} ل.س
+            </span>
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-500 overflow-hidden text-ellipsis">
+          {product.description}
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100 mt-auto">
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            <MapPin className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{product.location}</span>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
             <Calendar className="w-3 h-3" />
-            <span>{formatDate(product.created_at)}</span>
+            <span className="whitespace-nowrap">
+              {formatDate(product.created_at)}
+            </span>
           </div>
         </div>
       </div>
@@ -215,11 +231,8 @@ export default function SearchComponent() {
       try {
         if (showLoading) setLoading(true);
 
-        let query = supabase
-          .from("ads")
-          .select("*")
-          .eq("status", "active")
-          .order("created_at", { ascending: false });
+        let query = supabase.rpc("get_all_ads"); 
+          
 
         if (searchQuery.trim()) {
           query = query.or(
@@ -235,7 +248,7 @@ export default function SearchComponent() {
           query = query.eq("location", filters.location);
         }
 
-        const { data, error } = await query;
+        const {data,error} = await query;
         if (error) throw error;
 
         setAds(data || []);
@@ -260,7 +273,6 @@ export default function SearchComponent() {
       }
     }
   }, [supabase, router]);
-
 
   const fetchFilters = useCallback(async () => {
     try {
@@ -477,11 +489,7 @@ export default function SearchComponent() {
             ) : ads.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {ads.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onClick={() => router.push(`/product/${product.id}`)}
-                  />
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
