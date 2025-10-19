@@ -136,13 +136,13 @@ const extractFileName = (oldAvatar) => {
   };
 
   return (
-    <div className="p-5 h-[calc(100vh+5px)]">
+    <div className="p-5 h-[calc(100vh+5px)] bg-white dark:bg-gray-900">
       <div className="flex items-center justify-between">
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-          <p className="text-red-600 text-sm">{error}</p>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       )}
 
@@ -152,7 +152,7 @@ const extractFileName = (oldAvatar) => {
           alt="avatar preview"
           width={96} // يجب تحديد العرض
           height={96} // يجب تحديد الطول
-          className="w-24 h-24 rounded-full border-4 object-cover bg-white"
+          className="w-24 h-24 rounded-full border-4 object-cover bg-white dark:bg-gray-800"
           style={{ borderColor: "#1877F2" }}
         />
         <label className="cursor-pointer">
@@ -166,12 +166,12 @@ const extractFileName = (oldAvatar) => {
           <span
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               loading
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
                 : "hover:opacity-90 cursor-pointer"
             }`}
             style={{
-              backgroundColor: loading ? "#E5E7EB" : "#E8F4FD",
-              color: loading ? "#9CA3AF" : "#1877F2",
+              backgroundColor: loading ? '#E5E7EB' : '#E8F4FD',
+              color: loading ? '#9CA3AF' : '#1877F2',
             }}
           >
             {loading ? "جاري الرفع..." : "تغيير الصورة"}
@@ -181,7 +181,7 @@ const extractFileName = (oldAvatar) => {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-gray-700 text-sm font-medium mb-2">
+          <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
             الاسم الكامل
           </label>
           <input
@@ -190,14 +190,14 @@ const extractFileName = (oldAvatar) => {
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, fullName: e.target.value }))
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="أدخل اسمك الكامل"
             disabled={loading}
           />
         </div>
 
         <div>
-          <label className="block text-gray-700 text-sm font-medium mb-2">
+          <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
             رقم الهاتف
           </label>
           <input
@@ -206,14 +206,14 @@ const extractFileName = (oldAvatar) => {
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, phone: e.target.value }))
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="09XXXXXXXX"
             disabled={loading}
           />
         </div>
 
         <div>
-          <label className="block text-gray-700 text-sm font-medium mb-2">
+          <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
             الموقع
           </label>
           <select
@@ -221,7 +221,7 @@ const extractFileName = (oldAvatar) => {
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, location: e.target.value }))
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={loading}
           >
             <option value="">اختر المحافظة</option>
@@ -243,7 +243,10 @@ const extractFileName = (oldAvatar) => {
         >
           {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
         </button>
-        <button onClick={() => router.push("/main")} className="flex-1 ...">
+        <button 
+          onClick={() => router.push("/main")} 
+          className="flex-1 py-3 rounded-lg font-medium transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+        >
           الرجوع للرئيسية
         </button>
       </div>

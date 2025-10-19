@@ -12,11 +12,11 @@ export default function MessageToast({ currentUser }) {
   const router = useRouter();
   const supabase = createClient();
   const [notification, setNotification] = useState(null);
-const pathname = usePathname();
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    // الاستماع للرسائل الجديدة
     const channel = supabase
       .channel('new-messages')
       .on(
@@ -29,19 +29,18 @@ const pathname = usePathname();
         },
         async (payload) => {
           const message = payload.new;
-                    // ✅ تحقق من المسار الحالي
+          
           const isInConversation = pathname === `/chat/${message.conversation_id}`;
-                    if (isInConversation) {
+          if (isInConversation) {
             return;
           }
-          // جلب معلومات المرسل
+
           const { data: sender } = await supabase
             .from('profiles')
             .select('full_name, avatar_url')
             .eq('id', message.sender_id)
             .single();
 
-          // التحقق من أن الرسالة موجهة للمستخدم الحالي
           const { data: conv } = await supabase
             .from('conversations')
             .select('buyer_id, seller_id')
@@ -58,7 +57,6 @@ const pathname = usePathname();
               timestamp: new Date()
             });
 
-            // إخفاء بعد 5 ثواني
             setTimeout(() => {
               setNotification(null);
             }, 5000);
@@ -77,7 +75,7 @@ const pathname = usePathname();
   return (
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] animate-slide-down">
       <div 
-        className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 min-w-[320px] max-w-md cursor-pointer hover:shadow-xl transition-shadow"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-700 p-4 min-w-[320px] max-w-md cursor-pointer hover:shadow-xl transition-shadow"
         onClick={() => {
           router.push(`/chat/${notification.conversationId}`);
           setNotification(null);
@@ -93,7 +91,7 @@ const pathname = usePathname();
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
-              <p className="font-semibold text-gray-900 text-sm">
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">
                 {notification.senderName}
               </p>
               <button
@@ -101,12 +99,12 @@ const pathname = usePathname();
                   e.stopPropagation();
                   setNotification(null);
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 line-clamp-2">
+            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
               {notification.content}
             </p>
           </div>

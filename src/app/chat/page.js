@@ -123,8 +123,10 @@ export default function ChatListPage() {
       <AppLayout>
         <div className="flex items-center justify-center pt-20">
           <div className="text-center">
+            {/* border-blue-500 لا يتغير */}
             <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 border-blue-500"></div>
-            <p className="text-gray-600">جاري تحميل المحادثات...</p>
+            {/* text-gray-600 -> dark:text-gray-300 */}
+            <p className="text-gray-600 dark:text-gray-300">جاري تحميل المحادثات...</p>
           </div>
         </div>
       </AppLayout>
@@ -135,15 +137,20 @@ export default function ChatListPage() {
     <AppLayout>
       <div className="max-w-4xl mx-auto p-4">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 pb-3 border-b-2 border-gray-200">
+          {/* text-gray-900 -> dark:text-white */}
+          {/* border-gray-200 -> dark:border-gray-700 */}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white pb-3 border-b-2 border-gray-200 dark:border-gray-700">
             المحادثات
           </h1>
         </div>
 
         {conversations.length === 0 ? (
           <div className="text-center py-12">
+            {/* text-gray-300 لا يتغير (لون فاتح) */}
             <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg mb-2">لا توجد محادثات بعد</p>
+            {/* text-gray-500 -> dark:text-gray-400 */}
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">لا توجد محادثات بعد</p>
+            {/* text-gray-400 لا يتغير (لون فاتح) */}
             <p className="text-gray-400 text-sm">
               ابدأ محادثة جديدة من خلال التواصل مع البائعين
             </p>
@@ -155,7 +162,10 @@ export default function ChatListPage() {
               <div
                 key={conv.id}
                 onClick={() => router.push(`/chat/${conv.id}`)}
-                className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                // bg-white -> dark:bg-gray-900
+                // border-gray-200 -> dark:border-gray-700
+                // hover:shadow-md -> dark:hover:shadow-gray-900/30 (تطبيق قاعدة الظلال)
+                className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900/30 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <Image
@@ -163,24 +173,29 @@ export default function ChatListPage() {
                     alt={conv.otherUser?.full_name || "مستخدم"}
                     width={48}
                     height={48}
-                    className="rounded-full object-cover bg-gray-100"
+                    // bg-gray-100 -> dark:bg-gray-800
+                    className="rounded-full object-cover bg-gray-100 dark:bg-gray-800"
                     onError={(e) => { e.target.src = "/avatar.svg"; }}
                   />
                     {/* النقطة الحمراء */}
   {((currentUser.id === conv.buyer_id && conv.unread_count_buyer > 0) ||
     (currentUser.id === conv.seller_id && conv.unread_count_seller > 0)) && (
-    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></span>
+    // border-white -> dark:border-gray-900 (لتتناسب مع خلفية البطاقة الداكنة)
+    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900">
+                      {/* text-gray-900 -> dark:text-white */}
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         {conv.otherUser?.full_name || "مستخدم"}
                       </h3>
-                      <span className="text-xs text-gray-500">
+                      {/* text-gray-500 -> dark:text-gray-400 */}
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatTime(conv.lastMessage?.created_at || conv.created_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 truncate">
+                    {/* text-gray-600 -> dark:text-gray-300 */}
+                    <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
                       {conv.lastMessage?.content || "لا توجد رسائل بعد"}
                     </p>
                   </div>

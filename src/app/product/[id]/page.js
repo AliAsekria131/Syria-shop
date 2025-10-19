@@ -372,391 +372,373 @@ export default function ProductDetailsPage() {
     );
   }
 
-  return (
-    <AppLayout>
-      <div className="p-4 md:p-6">
-        {/* Title */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 pb-3 border-b-2 border-gray-200">
-            تفاصيل المنتج
-          </h1>
-        </div>
+  // product/[id]/page.js - الجزء الرئيسي فقط (Return Statement)
 
-        {/* Desktop Layout */}
-        <div className="hidden md:block">
-          <div className="flex gap-6">
-            {/* Left Side - Main Product Card */}
-            <div className="w-1/2">
-              <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 sticky top-24">
-                {/* Image Container */}
-                <div className="relative group p-4">
-                  <div
-                    className="relative w-full bg-gray-100 rounded-2xl flex items-center justify-center p-4"
-                    style={{ aspectRatio: "4/3" }}
-                  >
-                    <Image
-                      src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-                      alt={product.title}
-                      fill
-                      className="object-cover rounded-2xl"
-                      onError={handleImageError}
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                  </div>
+return (
+  <AppLayout>
+    <div className="p-4 md:p-6">
+      {/* Title */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white pb-3 border-b-2 border-gray-200 dark:border-gray-700">
+          تفاصيل المنتج
+        </h1>
+      </div>
 
-                  {/* Action Buttons */}
-                  <div className="absolute top-6 right-6 flex flex-col gap-2">
-                    <button
-                      onClick={() =>
-                        document
-                          .getElementById("comments-section")
-                          ?.scrollIntoView({ behavior: "smooth" })
-                      }
-                      className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                      style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <MessageCircle className="w-5 h-5 text-gray-700" />
-                    </button>
-                    <button
-                      className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-                      style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <Share className="w-5 h-5 text-gray-700" />
-                    </button>
-                    <button
-                      onClick={handleLike}
-                      disabled={likeLoading}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
-                        likeLoading ? "opacity-50" : ""
-                      }`}
-                      style={{
-                        backgroundColor: isLiked
-                          ? "rgba(239, 68, 68, 0.9)"
-                          : "rgba(255, 255, 255, 0.9)",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <Heart
-                        className={`w-5 h-5 ${
-                          isLiked ? "text-white fill-current" : "text-gray-700"
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Navigation Arrows */}
-                  {product.image_urls?.length > 1 && (
-                    <>
-                      <button
-                        className="absolute left-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        style={{
-                          backgroundColor: "rgba(255, 255, 255, 0.8)",
-                        }}
-                      >
-                        <ArrowLeft className="w-5 h-5 text-gray-700" />
-                      </button>
-                      <button
-                        className="absolute right-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        style={{
-                          backgroundColor: "rgba(255, 255, 255, 0.8)",
-                        }}
-                      >
-                        <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
-                      </button>
-                    </>
-                  )}
+      {/* Desktop Layout */}
+      <div className="hidden md:block">
+        <div className="flex gap-6">
+          {/* Left Side - Main Product Card */}
+          <div className="w-1/2">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden border border-gray-300 dark:border-gray-600 sticky top-24">
+              {/* Image Container */}
+              <div className="relative group p-4">
+                <div
+                  className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center p-4"
+                  style={{ aspectRatio: "4/3" }}
+                >
+                  <Image
+                    src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+                    alt={product.title}
+                    fill
+                    className="object-cover rounded-2xl"
+                    onError={handleImageError}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
                 </div>
 
-                {/* Product Info */}
-                <div className="p-5 pt-0">
-                  {/* Seller Info */}
-                  <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                    <Image
-                      src={seller?.avatar_url || "/avatar.svg"}
-                      alt="البائع"
-                      width={32}
-                      height={32}
-                      className="rounded-full object-cover bg-gray-100"
-                      onError={(e) => {
-                        e.target.src = "/avatar.svg";
-                      }}
-                    />
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {seller?.full_name || "البائع"}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {formatDate(product.created_at)}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Contact Buttons */}
-                  <div className="contact-buttons flex gap-2 mb-4">
-                    {!isOwner && (
-                      <button
-                        onClick={() => startChat(seller.id)}
-                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>مراسلة</span>
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="mb-2 flex flex-row flex-wrap justify-between items-center">
-                    <h1 className="text-xl font-bold text-gray-900 mb-4">
-                      {product.title}
-                    </h1>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatPrice(product.price)} {product.currency}
-                    </div>
-                  </div>
-
-                  {/* Horizontal Info Layout */}
-                  <div className="flex items-center justify-between mb-4"></div>
-
-                  {/* Description */}
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                    {product.description}
-                  </p>
-
-                  {/* Additional Info */}
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {formatDate(product.created_at)}
-                    </span>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin className="w-4 h-4" />
-                      <span>{product.location}</span>
-                    </div>
-                  </div>
-
-                  {/* Comments Section */}
-                  <div id="comments-section">
-                    <Comments
-                      productId={productId}
-                      currentUser={currentUser}
-                      supabase={supabase}
-                      isOwner={isOwner}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side - Similar Products */}
-            <div className="w-1/2">
-              <div className="grid grid-cols-2 gap-4">
-                {relatedProducts.slice(0, 6).map((relatedProduct) => (
-                  <div
-                    key={relatedProduct.id}
-                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 cursor-pointer"
-                    onClick={() => router.push(`/product/${relatedProduct.id}`)}
-                  >
-                    <div
-                      className="relative w-full bg-gray-100 flex items-center justify-center p-2"
-                      style={{ aspectRatio: "1/1" }}
-                    >
-                      <Image
-                        src={
-                          relatedProduct.image_urls?.[0] ||
-                          "/placeholder-image.jpg"
-                        }
-                        alt={relatedProduct.title}
-                        fill
-                        className="object-contain"
-                        onError={handleImageError}
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                      />
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
-                        {relatedProduct.title}
-                      </h3>
-                      <div className="text-sm font-bold text-green-600">
-                        {formatPrice(relatedProduct.price)}{" "}
-                        {relatedProduct.currency}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Layout */}
-        <div className="md:hidden">
-          {/* Main Product Card */}
-          <div className="bg-white rounded-3xl overflow-hidden border border-gray-300 mb-6">
-            {/* Image */}
-            <div className="relative p-3">
-              <div className="relative w-full h-60 bg-gray-100 rounded-2xl flex items-center justify-center p-4">
-                <Image
-                  src={product.image_urls?.[0] || "/placeholder-image.jpg"}
-                  alt={product.title}
-                  fill
-                  className="object-contain"
-                  onError={handleImageError}
-                  sizes="100vw"
-                />
-              </div>
-
-              {/* Navigation Button */}
-              {product.image_urls?.length > 1 && (
-                <button className="absolute top-6 left-6 w-10 h-10 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-md">
-                  <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
-                </button>
-              )}
-            </div>
-
-            {/* Mobile Action Buttons */}
-            <div className="p-4 border-b border-gray-100">
-              <div className="contact-buttons flex gap-2 mb-4">
-                {!isOwner && (
+                {/* Action Buttons */}
+                <div className="absolute top-6 right-6 flex flex-col gap-2">
                   <button
-                    onClick={() => startChat(seller.id)}
-                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                    onClick={() =>
+                      document
+                        .getElementById("comments-section")
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
+                    className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 bg-white/90 dark:bg-gray-800/90"
+                    style={{ backdropFilter: "blur(4px)" }}
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>مراسلة</span>
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <Image
-                  src={seller?.avatar_url || "/avatar.svg"}
-                  alt="البائع"
-                  width={32}
-                  height={32}
-                  className="rounded-full object-cover bg-gray-100"
-                  onError={(e) => {
-                    e.target.src = "/avatar.svg";
-                  }}
-                />
-
-                <div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {seller?.full_name || "البائع"}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-3">
-                  <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
-                    <Share className="w-5 h-5 text-gray-600" />
+                    <MessageCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                   </button>
                   <button
-                    onClick={() => setShowMobileComments(true)}
-                    className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300"
+                    className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 bg-white/90 dark:bg-gray-800/90"
+                    style={{ backdropFilter: "blur(4px)" }}
                   >
-                    <MessageCircle className="w-5 h-5 text-gray-600" />
+                    <Share className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                   </button>
                   <button
                     onClick={handleLike}
                     disabled={likeLoading}
-                    className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all ${
-                      isLiked ? "border-red-500 bg-red-50" : "border-gray-300"
-                    } ${likeLoading ? "opacity-50" : ""}`}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
+                      likeLoading ? "opacity-50" : ""
+                    }`}
+                    style={{
+                      backgroundColor: isLiked
+                        ? "rgba(239, 68, 68, 0.9)"
+                        : "rgba(255, 255, 255, 0.9)",
+                      backdropFilter: "blur(4px)",
+                    }}
                   >
                     <Heart
                       className={`w-5 h-5 ${
-                        isLiked ? "text-red-500 fill-current" : "text-gray-600"
+                        isLiked ? "text-white fill-current" : "text-gray-700 dark:text-gray-300"
                       }`}
                     />
-                    <span
-                      className={`text-sm ${
-                        isLiked ? "text-red-500" : "text-gray-600"
-                      }`}
-                    >
-                      {likesCount}
-                    </span>
                   </button>
                 </div>
-              </div>
-            </div>
 
-            {/* Product Info */}
-            <div className="p-4">
-              {/* Contact Buttons */}
-              <hr className="my-4 border-gray-200" />
-
-              <h1 className="text-xl font-bold text-gray-900 mb-3">
-                {product.title}
-              </h1>
-
-              <div className="text-2xl font-bold text-green-600 mb-3">
-                {formatPrice(product.price)} {product.currency}
+                {/* Navigation Arrows */}
+                {product.image_urls?.length > 1 && (
+                  <>
+                    <button className="absolute left-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/80 dark:bg-gray-800/80">
+                      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    </button>
+                    <button className="absolute right-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/80 dark:bg-gray-800/80">
+                      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300 rotate-180" />
+                    </button>
+                  </>
+                )}
               </div>
 
-              <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                {product.description}
-              </p>
+              {/* Product Info */}
+              <div className="p-5 pt-0">
+                {/* Seller Info */}
+                <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <Image
+                    src={seller?.avatar_url || "/avatar.svg"}
+                    alt="البائع"
+                    width={32}
+                    height={32}
+                    className="rounded-full object-cover bg-gray-100 dark:bg-gray-700"
+                    onError={(e) => {
+                      e.target.src = "/avatar.svg";
+                    }}
+                  />
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {seller?.full_name || "البائع"}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatDate(product.created_at)}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Contact Buttons */}
+                <div className="contact-buttons flex gap-2 mb-4">
+                  {!isOwner && (
+                    <button
+                      onClick={() => startChat(seller.id)}
+                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>مراسلة</span>
+                    </button>
+                  )}
+                </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <MapPin className="w-4 h-4" />
-                <span>{product.location}</span>
+                <div className="mb-2 flex flex-row flex-wrap justify-between items-center">
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                    {product.title}
+                  </h1>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {formatPrice(product.price)} {product.currency}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
+                  {product.description}
+                </p>
+
+                {/* Additional Info */}
+                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    {formatDate(product.created_at)}
+                  </span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="w-4 h-4" />
+                    <span>{product.location}</span>
+                  </div>
+                </div>
+
+                {/* Comments Section */}
+                <div id="comments-section">
+                  <Comments
+                    productId={productId}
+                    currentUser={currentUser}
+                    supabase={supabase}
+                    isOwner={isOwner}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Related Products Grid */}
-          <div className="grid grid-cols-2 gap-2">
-            {relatedProducts.slice(0, 4).map((relatedProduct) => (
-              <div
-                key={relatedProduct.id}
-                className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"
-                onClick={() => router.push(`/product/${relatedProduct.id}`)}
-              >
+          {/* Right Side - Similar Products */}
+          <div className="w-1/2">
+            <div className="grid grid-cols-2 gap-4">
+              {relatedProducts.slice(0, 6).map((relatedProduct) => (
                 <div
-                  className="relative w-full bg-gray-100 flex items-center justify-center p-2"
-                  style={{ aspectRatio: "1/1" }}
+                  key={relatedProduct.id}
+                  className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md dark:hover:shadow-gray-900/50 transition-all duration-200 border border-gray-100 dark:border-gray-700 cursor-pointer"
+                  onClick={() => router.push(`/product/${relatedProduct.id}`)}
                 >
-                  <Image
-                    src={
-                      relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"
-                    }
-                    alt={relatedProduct.title}
-                    fill
-                    className="object-contain"
-                    onError={handleImageError}
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                  />
-                </div>
-                <div className="p-3">
-                  <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
-                    {relatedProduct.title}
-                  </h3>
-                  <div className="text-sm font-bold text-green-600">
-                    {formatPrice(relatedProduct.price)}{" "}
-                    {relatedProduct.currency}
+                  <div
+                    className="relative w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center p-2"
+                    style={{ aspectRatio: "1/1" }}
+                  >
+                    <Image
+                      src={
+                        relatedProduct.image_urls?.[0] ||
+                        "/placeholder-image.jpg"
+                      }
+                      alt={relatedProduct.title}
+                      fill
+                      className="object-contain"
+                      onError={handleImageError}
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                    />
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-medium text-sm text-gray-900 dark:text-white mb-1 line-clamp-2">
+                      {relatedProduct.title}
+                    </h3>
+                    <div className="text-sm font-bold text-green-600 dark:text-green-400">
+                      {formatPrice(relatedProduct.price)}{" "}
+                      {relatedProduct.currency}
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        {/* Main Product Card */}
+        <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden border border-gray-300 dark:border-gray-600 mb-6">
+          {/* Image */}
+          <div className="relative p-3">
+            <div className="relative w-full h-60 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center p-4">
+              <Image
+                src={product.image_urls?.[0] || "/placeholder-image.jpg"}
+                alt={product.title}
+                fill
+                className="object-contain"
+                onError={handleImageError}
+                sizes="100vw"
+              />
+            </div>
+
+            {/* Navigation Button */}
+            {product.image_urls?.length > 1 && (
+              <button className="absolute top-6 left-6 w-10 h-10 bg-white dark:bg-gray-800 bg-opacity-80 rounded-full flex items-center justify-center shadow-md">
+                <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300 rotate-180" />
+              </button>
+            )}
+          </div>
+
+          {/* Mobile Action Buttons */}
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+            <div className="contact-buttons flex gap-2 mb-4">
+              {!isOwner && (
+                <button
+                  onClick={() => startChat(seller.id)}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>مراسلة</span>
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <Image
+                src={seller?.avatar_url || "/avatar.svg"}
+                alt="البائع"
+                width={32}
+                height={32}
+                className="rounded-full object-cover bg-gray-100 dark:bg-gray-700"
+                onError={(e) => {
+                  e.target.src = "/avatar.svg";
+                }}
+              />
+
+              <div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {seller?.full_name || "البائع"}
+                </div>
               </div>
-            ))}
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3">
+                <button className="w-10 h-10 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center bg-white dark:bg-gray-800">
+                  <Share className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+                <button
+                  onClick={() => setShowMobileComments(true)}
+                  className="flex items-center gap-1 px-3 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+                >
+                  <MessageCircle className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+                <button
+                  onClick={handleLike}
+                  disabled={likeLoading}
+                  className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all ${
+                    isLiked ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+                  } ${likeLoading ? "opacity-50" : ""}`}
+                >
+                  <Heart
+                    className={`w-5 h-5 ${
+                      isLiked ? "text-red-500 fill-current" : "text-gray-600 dark:text-gray-300"
+                    }`}
+                  />
+                  <span
+                    className={`text-sm ${
+                      isLiked ? "text-red-500" : "text-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    {likesCount}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Info */}
+          <div className="p-4">
+            <hr className="my-4 border-gray-200 dark:border-gray-700" />
+
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+              {product.title}
+            </h1>
+
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-3">
+              {formatPrice(product.price)} {product.currency}
+            </div>
+
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
+              {product.description}
+            </p>
+
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <MapPin className="w-4 h-4" />
+              <span>{product.location}</span>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Comments Modal */}
-        {showMobileComments && (
-          <Comments
-            productId={productId}
-            currentUser={currentUser}
-            supabase={supabase}
-            isOwner={isOwner}
-            showMobile={true}
-            onClose={() => setShowMobileComments(false)}
-          />
-        )}
+        {/* Related Products Grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {relatedProducts.slice(0, 4).map((relatedProduct) => (
+            <div
+              key={relatedProduct.id}
+              className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer"
+              onClick={() => router.push(`/product/${relatedProduct.id}`)}
+            >
+              <div
+                className="relative w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center p-2"
+                style={{ aspectRatio: "1/1" }}
+              >
+                <Image
+                  src={
+                    relatedProduct.image_urls?.[0] || "/placeholder-image.jpg"
+                  }
+                  alt={relatedProduct.title}
+                  fill
+                  className="object-contain"
+                  onError={handleImageError}
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
+              </div>
+              <div className="p-3">
+                <h3 className="font-semibold text-sm text-gray-900 dark:text-white mb-1 line-clamp-2">
+                  {relatedProduct.title}
+                </h3>
+                <div className="text-sm font-bold text-green-600 dark:text-green-400">
+                  {formatPrice(relatedProduct.price)}{" "}
+                  {relatedProduct.currency}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </AppLayout>
-  );
+
+      {/* Mobile Comments Modal */}
+      {showMobileComments && (
+        <Comments
+          productId={productId}
+          currentUser={currentUser}
+          supabase={supabase}
+          isOwner={isOwner}
+          showMobile={true}
+          onClose={() => setShowMobileComments(false)}
+        />
+      )}
+    </div>
+  </AppLayout>
+);
 }

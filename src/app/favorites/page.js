@@ -129,8 +129,10 @@ export default function FavoritesPage() {
         <div className="p-4 md:p-6">
           <div className="flex items-center justify-center pt-20">
             <div className="text-center">
+              {/* bg-red-500 لا يتغير */}
               <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">جاري تحميل المُفضلة...</p>
+              {/* text-gray-600 -> dark:text-gray-300 */}
+              <p className="text-gray-600 dark:text-gray-300">جاري تحميل المُفضلة...</p>
             </div>
           </div>
         </div>
@@ -141,25 +143,15 @@ export default function FavoritesPage() {
   return (
     <AppLayout>
       <div className="p-4 md:p-6">
-        {/* Mobile Title 
-        <div className="md:hidden mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">المُفضلة</h1>
-          </div>
-        </div>*/}
-
         {/* Error State */}
         {error && (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⚠</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">خطأ</h2>
-            <p className="text-gray-600 mb-4">{error}</p>
+            {/* text-gray-800 -> dark:text-gray-100 */}
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">خطأ</h2>
+            {/* text-gray-600 -> dark:text-gray-300 */}
+            <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+            {/* bg-red-500, text-white, hover:bg-red-600 لا تتغير */}
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
@@ -172,13 +164,17 @@ export default function FavoritesPage() {
         {/* Empty State */}
         {!loading && !error && likedProducts.length === 0 && (
           <div className="text-center py-20">
+            {/* text-gray-300 لا يتغير لأنه فاتح بالفعل */}
             <HeartOff className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-800 mb-2">
+            {/* text-gray-800 -> dark:text-gray-100 */}
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
               لا توجد منتجات مُفضلة
             </h2>
-            <p className="text-gray-600 mb-6">
+            {/* text-gray-600 -> dark:text-gray-300 */}
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               لم تقم بإضافة أي منتجات إلى المُفضلة بعد
             </p>
+            {/* bg-red-500, text-white, hover:bg-red-600 لا تتغير */}
             <button
               onClick={() => router.push("/main")}
               className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
@@ -196,16 +192,19 @@ export default function FavoritesPage() {
               return (
                 <div
                   key={likeItem.id}
-                  className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 group relative"
+                  // bg-white -> dark:bg-gray-900
+                  // shadow-sm, hover:shadow-lg -> dark:shadow-gray-900/50
+                  // border-gray-100 -> dark:border-gray-800 (استخدمت 800 لـ gray-100)
+                  className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-lg dark:hover:shadow-gray-900/50 transition-all duration-200 border border-gray-100 dark:border-gray-800 group relative"
                 >
                   {/* Remove Like Button */}
                   <button
                     onClick={() => handleRemoveLike(product.id, likeItem.id)}
                     disabled={removingLike === product.id}
-                    className={`absolute top-3 left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all opacity-0 group-hover:opacity-100 ${
+                    className={`absolute top-3 left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-md dark:shadow-gray-900/30 transition-all opacity-0 group-hover:opacity-100 ${
                       removingLike === product.id
-                        ? "bg-gray-300"
-                        : "bg-white hover:bg-red-50"
+                        ? "bg-gray-300 dark:bg-gray-700" // bg-gray-300 -> dark:bg-gray-700
+                        : "bg-white dark:bg-gray-900 hover:bg-red-50 dark:hover:bg-red-900/20" // bg-white -> dark:bg-gray-900, hover:bg-red-50 -> dark:hover:bg-red-900/20 (اختياري)
                     }`}
                   >
                     {removingLike === product.id ? (
@@ -217,7 +216,8 @@ export default function FavoritesPage() {
 
                   {/* Product Image */}
                   <div
-                    className="relative w-full bg-gray-100 cursor-pointer"
+                    // bg-gray-100 -> dark:bg-gray-800
+                    className="relative w-full bg-gray-100 dark:bg-gray-800 cursor-pointer"
                     style={{ aspectRatio: "4/3" }}
                     onClick={() => router.push(`/product/${product.id}`)}
                   >
@@ -237,25 +237,30 @@ export default function FavoritesPage() {
                     className="p-4 cursor-pointer"
                     onClick={() => router.push(`/product/${product.id}`)}
                   >
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {/* text-gray-900 -> dark:text-white */}
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
                       {product.title}
                     </h3>
 
                     <div className="text-lg font-bold text-green-600 mb-2">
+                      {/* text-green-600 لا يتغير */}
                       {formatPrice(product.price)} {product.currency}
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                    {/* text-gray-500 -> dark:text-gray-400 */}
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
                       <MapPin className="w-4 h-4" />
                       <span>{product.location}</span>
                     </div>
 
+                    {/* text-gray-400 لا يتغير لأنه فاتح بما فيه الكفاية */}
                     <div className="flex items-center justify-between text-xs text-gray-400">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         <span>{formatDate(likeItem.created_at)}</span>
                       </div>
-                      <span className="px-2 py-1 bg-gray-100 rounded-full">
+                      {/* bg-gray-100 -> dark:bg-gray-800 */}
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
                         {product.category}
                       </span>
                     </div>

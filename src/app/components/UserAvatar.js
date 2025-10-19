@@ -29,7 +29,7 @@ export default function UserAvatar({
         src={imgSrc}
         alt={alt}
         fill
-        className="rounded-full object-cover bg-gray-100"
+        className="rounded-full object-cover bg-gray-100 dark:bg-gray-800"
         onError={handleError}
         unoptimized={imgSrc?.startsWith('http') || imgSrc === "/avatar.svg"}
         sizes={`${size}px`}

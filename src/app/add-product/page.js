@@ -242,14 +242,14 @@ export default function AddProductPage() {
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto p-4 md:p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">إنشاء منشور</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">إنشاء منشور</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* قسم الصورة */}
           <div className="space-y-4">
             <div className="relative">
               {imagePreview ? (
-                <div className="relative aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden">
+                <div className="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
                   <Image
                     src={imagePreview}
                     alt="معاينة الصورة"
@@ -259,18 +259,18 @@ export default function AddProductPage() {
                   <button
                     onClick={removeImage}
                     type="button"
-                    className="absolute top-3 left-3 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50"
+                    className="absolute top-3 left-3 p-2 bg-white dark:bg-gray-900 rounded-full shadow-lg dark:shadow-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
-                <div className="h-55 bg-gray-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
-                  <Upload className="w-12 h-12 text-gray-400 mb-4" />
-                  <p className="text-gray-600 mb-2 text-center">
+                <div className="h-55 bg-gray-100 dark:bg-gray-800 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 transition-colors">
+                  <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" />
+                  <p className="text-gray-600 dark:text-gray-300 mb-2 text-center">
                     اختر ملفاً أو اسحبه وأفلته هنا
                   </p>
-                  <p className="text-sm text-gray-500 text-center px-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center px-4">
                     JPG, PNG, WEBP أقل من {VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB
                   </p>
                 
@@ -288,7 +288,7 @@ export default function AddProductPage() {
                   disabled={loading}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <div className="flex items-center justify-center p-3 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+                <div className="flex items-center justify-center p-3 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                   <Camera className="w-5 h-5 ml-2" />
                   <span>التقاط صورة</span>
                 </div>
@@ -302,7 +302,7 @@ export default function AddProductPage() {
                   disabled={loading}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <div className="flex items-center justify-center p-3 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+                <div className="flex items-center justify-center p-3 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                   <FileImage className="w-5 h-5 ml-2" />
                   <span>من المعرض</span>
                 </div>
@@ -313,9 +313,9 @@ export default function AddProductPage() {
           {/* قسم النموذج */}
           <div className="space-y-6">
             {errors.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4" role="alert">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4" role="alert">
                 {errors.map((error, index) => (
-                  <p key={index} className="text-red-600 text-sm mb-1">
+                  <p key={index} className="text-red-600 dark:text-red-400 text-sm mb-1">
                     • {error}
                   </p>
                 ))}
@@ -323,7 +323,7 @@ export default function AddProductPage() {
             )}
 
             <div>
-              <label htmlFor="title" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="title" className="block text-gray-700 dark:text-gray-200 font-medium mb-2">
                 العنوان
               </label>
               <input
@@ -333,13 +333,13 @@ export default function AddProductPage() {
                 value={formData.title}
                 onChange={(e) => updateField("title", e.target.value)}
                 maxLength={VALIDATION.MAX_TITLE}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:border-red-500 focus:outline-none transition-colors"
+                className="w-full p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl focus:border-red-500 focus:outline-none transition-colors"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="description" className="block text-gray-700 dark:text-gray-200 font-medium mb-2">
                 الوصف
               </label>
               <textarea
@@ -349,13 +349,13 @@ export default function AddProductPage() {
                 value={formData.description}
                 onChange={(e) => updateField("description", e.target.value)}
                 maxLength={VALIDATION.MAX_DESC}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors"
+                className="w-full p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="price" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="price" className="block text-gray-700 dark:text-gray-200 font-medium mb-2">
                 السعر (ل.س)
               </label>
               <input
@@ -367,46 +367,46 @@ export default function AddProductPage() {
                 step="0.01"
                 value={formData.price}
                 onChange={(e) => updateField("price", e.target.value)}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:border-red-500 focus:outline-none transition-colors"
+                className="w-full p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl focus:border-red-500 focus:outline-none transition-colors"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="category" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="category" className="block text-gray-700 dark:text-gray-200 font-medium mb-2">
                 لوحة
               </label>
               <select
                 id="category"
                 value={formData.category}
                 onChange={(e) => updateField("category", e.target.value)}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:border-red-500 focus:outline-none transition-colors"
+                className="w-full p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl focus:border-red-500 focus:outline-none transition-colors"
                 disabled={loading}
               >
-                <option value="">اختر لوحة</option>
-                <option value="كتب">كتب</option>
-                <option value="الكترونيات">إلكترونيات</option>
-                <option value="سيارات">سيارات</option>
-                <option value="أزياء">أزياء</option>
-                <option value="منزل وحديقة">منزل وحديقة</option>
-                <option value="رياضة">رياضة</option>
+                <option value="" className="bg-white dark:bg-gray-900">اختر لوحة</option>
+                <option value="كتب" className="bg-white dark:bg-gray-900">كتب</option>
+                <option value="الكترونيات" className="bg-white dark:bg-gray-900">إلكترونيات</option>
+                <option value="سيارات" className="bg-white dark:bg-gray-900">سيارات</option>
+                <option value="أزياء" className="bg-white dark:bg-gray-900">أزياء</option>
+                <option value="منزل وحديقة" className="bg-white dark:bg-gray-900">منزل وحديقة</option>
+                <option value="رياضة" className="bg-white dark:bg-gray-900">رياضة</option>
               </select>
             </div>
 
             <div>
-              <label htmlFor="location" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="location" className="block text-gray-700 dark:text-gray-200 font-medium mb-2">
                 الموقع
               </label>
               <select
                 id="location"
                 value={formData.location}
                 onChange={(e) => updateField("location", e.target.value)}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:border-red-500 focus:outline-none transition-colors"
+                className="w-full p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl focus:border-red-500 focus:outline-none transition-colors"
                 disabled={loading}
               >
-                <option value="">اختر الموقع</option>
+                <option value="" className="bg-white dark:bg-gray-900">اختر الموقع</option>
                 {SYRIAN_GOVERNORATES.map((province) => (
-                  <option key={province} value={province}>
+                  <option key={province} value={province} className="bg-white dark:bg-gray-900">
                     {province}
                   </option>
                 ))}
@@ -420,7 +420,7 @@ export default function AddProductPage() {
                 type="button"
                 className={`w-full py-4 rounded-full text-white font-medium transition-colors ${
                   loading
-                    ? "bg-gray-400 cursor-not-allowed"
+                    ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed" // تم إضافة dark:bg-gray-600 للتباين
                     : "bg-red-500 hover:bg-red-600"
                 }`}
               >

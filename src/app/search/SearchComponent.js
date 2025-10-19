@@ -8,8 +8,6 @@ import Image from "next/image";
 import { Search, Filter, MapPin, Calendar } from "lucide-react";
 import AppLayout from "../components/AppLayout";
 import UserProfileMenu from "../components/UserProfileMenu";
-import router from "next/router";
-
 import { useUser } from "../hooks/useUser";
 
 const supabase = createClient();
@@ -23,14 +21,14 @@ function FilterPanel({
   hasActiveFilters,
 }) {
   return (
-    <div className="px-6 pb-4 border-b border-gray-200">
+    <div className="px-6 pb-4 border-b border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-4">
         <select
           value={filters.category}
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, category: e.target.value }))
           }
-          className="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-red-500"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:border-red-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         >
           <option value="">جميع الفئات</option>
           {categories.map((category) => (
@@ -45,7 +43,7 @@ function FilterPanel({
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, location: e.target.value }))
           }
-          className="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-red-500"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:border-red-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         >
           <option value="">جميع المواقع</option>
           {locations.map((location) => (
@@ -78,10 +76,10 @@ function MobileFilterPanel({
   if (!show) return null;
 
   return (
-    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             الفئة
           </label>
           <select
@@ -89,7 +87,7 @@ function MobileFilterPanel({
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, category: e.target.value }))
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="">جميع الفئات</option>
             {categories.map((category) => (
@@ -101,7 +99,7 @@ function MobileFilterPanel({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             الموقع
           </label>
           <select
@@ -109,7 +107,7 @@ function MobileFilterPanel({
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, location: e.target.value }))
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="">جميع المواقع</option>
             {locations.map((location) => (
@@ -139,10 +137,11 @@ function ProductCard({ product }) {
     e.target.src = "/placeholder-image.jpg";
     e.target.alt = "صورة غير متاحة";
   };
+  
   return (
     <div
       key={product.id}
-      className="bg-white rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 hover:shadow-lg hover:border-red-400 flex flex-col"
+      className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 dark:border-gray-600 hover:shadow-lg dark:hover:shadow-gray-900/50 hover:border-red-400 dark:hover:border-red-500 flex flex-col"
       onClick={() => router.push(`/product/${product.id}`)}
     >
       <div className="relative p-2" style={{ aspectRatio: "7/6" }}>
@@ -150,12 +149,12 @@ function ProductCard({ product }) {
           src={product.image_urls?.[0] || "/placeholder-image.jpg"}
           alt={product.title}
           fill
-          className="object-cover rounded-xl bg-gray-100"
+          className="object-cover rounded-xl bg-gray-100 dark:bg-gray-800"
           onError={handleImageError}
           sizes="(max-width: 640px) 60vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 20vw"
           quality={75}
         />
-        <div className="absolute top-4 right-4 bg-black bg-opacity-60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+        <div className="absolute top-4 right-4 bg-black/60 dark:bg-black/70 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
           {product.category}
         </div>
       </div>
@@ -167,31 +166,31 @@ function ProductCard({ product }) {
             alt={product.full_name || "بائع مجهول"}
             width={20}
             height={20}
-            className="w-7 h-7 rounded-full object-cover bg-gray-200"
+            className="w-7 h-7 rounded-full object-cover bg-gray-200 dark:bg-gray-700"
             onError={handleImageError}
             loading="lazy"
           />
-          <span className="mr-2 truncate max-w-[120px]">
+          <span className="mr-2 truncate max-w-[120px] text-gray-900 dark:text-white">
             {product.full_name || "بائع مجهول"}
           </span>
         </div>
 
         <div className="mb-2 flex flex-row flex-wrap justify-between items-center">
-          <div className="font-semibold text-lg overflow-hidden text-ellipsis">
+          <div className="font-semibold text-lg overflow-hidden text-ellipsis text-gray-900 dark:text-white">
             {product.title}
           </div>
           <div className="flex items-center justify-between text-sm font-medium ml-2">
-            <span className="text-lg font-bold">
+            <span className="text-lg font-bold text-gray-900 dark:text-white">
               {formatPrice(product.price)} ل.س
             </span>
           </div>
         </div>
 
-        <div className="text-sm text-gray-500 overflow-hidden text-ellipsis">
+        <div className="text-sm text-gray-500 dark:text-gray-400 overflow-hidden text-ellipsis">
           {product.description}
         </div>
 
-        <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100 mt-auto">
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
           <div className="flex items-center gap-1 flex-1 min-w-0">
             <MapPin className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{product.location}</span>
@@ -232,7 +231,6 @@ export default function SearchComponent() {
         if (showLoading) setLoading(true);
 
         let query = supabase.rpc("get_all_ads"); 
-          
 
         if (searchQuery.trim()) {
           query = query.or(
@@ -272,7 +270,7 @@ export default function SearchComponent() {
         console.error("Sign out error:", err);
       }
     }
-  }, [supabase, router]);
+  }, [router]);
 
   const fetchFilters = useCallback(async () => {
     try {
@@ -356,28 +354,28 @@ export default function SearchComponent() {
   return (
     <AppLayout>
       {/* Desktop Header Extension */}
-      <div className="hidden md:block sticky top-[0px] z-30 bg-white border-b border-gray-200">
+      <div className="hidden md:block sticky top-[0px] z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <div className="px-3 py-2.5">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowDesktopFilters(!showDesktopFilters)}
               className={`p-2.5 rounded-lg transition-colors ${
                 showDesktopFilters
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
+                  ? "bg-gray-900 dark:bg-gray-700 text-white"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
               <Filter className="w-5 h-5" />
             </button>
 
             <form onSubmit={handleSearch} className="flex-1 relative">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
               <input
                 type="text"
                 placeholder="ابحث في المنتجات..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10 pl-4 py-2.5 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-lg border-2 border-gray-200 focus:outline-none text-sm"
+                className="w-full pr-10 pl-4 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 transition-colors rounded-lg border-2 border-gray-200 dark:border-gray-600 focus:outline-none text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 autoFocus
               />
               {searchLoading && (
@@ -404,17 +402,17 @@ export default function SearchComponent() {
       </div>
 
       {/* Mobile Header */}
-      <div className="md:hidden sticky top-0 z-30 bg-white border-b border-gray-200">
+      <div className="md:hidden sticky top-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 py-4">
           <form onSubmit={handleSearch} className="mb-4">
             <div className="relative">
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
               <input
                 type="text"
                 placeholder="ابحث في المنتجات..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-12 pl-6 py-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-2xl border-2 border-gray-200 focus:outline-none"
+                className="w-full pr-12 pl-6 py-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 transition-colors rounded-2xl border-2 border-gray-200 dark:border-gray-600 focus:outline-none text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 autoFocus
               />
               {searchLoading && (
@@ -431,7 +429,7 @@ export default function SearchComponent() {
               className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
                 showDesktopFilters
                   ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               <Filter className="w-4 h-4" />
@@ -462,13 +460,13 @@ export default function SearchComponent() {
         {loading ? (
           <div className="text-center py-20">
             <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">جاري البحث...</p>
+            <p className="text-gray-600 dark:text-gray-300">جاري البحث...</p>
           </div>
         ) : (
           <>
             {searchQuery && (
               <div className="mb-4">
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   {ads.length > 0
                     ? `تم العثور على ${ads.length} نتيجة للبحث عن "${searchQuery}"`
                     : `لا توجد نتائج للبحث عن "${searchQuery}"`}
@@ -478,11 +476,11 @@ export default function SearchComponent() {
 
             {ads.length === 0 && hasActiveFilters() ? (
               <div className="text-center py-20">
-                <Search className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                <Search className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   لا توجد نتائج مطابقة
                 </h3>
-                <p className="text-gray-500 mb-6">
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
                   جرب تعديل معايير البحث أو مسح الفلاتر
                 </p>
               </div>
@@ -494,11 +492,11 @@ export default function SearchComponent() {
               </div>
             ) : (
               <div className="text-center py-20">
-                <Search className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                <Search className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   ابحث عن المنتجات
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-gray-500 dark:text-gray-400">
                   أدخل كلمة البحث أو استخدم الفلاتر للعثور على ما تبحث عنه
                 </p>
               </div>

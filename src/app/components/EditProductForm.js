@@ -37,7 +37,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
   }, []);
 
   if (!product) {
-    return <div>خطأ في تحميل بيانات المنتج</div>;
+    return <div className="text-gray-900 dark:text-white">خطأ في تحميل بيانات المنتج</div>;
   }
 
   const updateField = (field, value) => {
@@ -65,7 +65,6 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
   };
 
   const uploadImage = async (file) => {
-    // رفع مباشر إلى Supabase Storage
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = `${fileName}`;
@@ -100,7 +99,6 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
         return;
       }
 
-      // تنظيف البيانات
       const cleanedData = {
         title: cleanText(formData.title),
         price: parsePrice(formData.price),
@@ -109,14 +107,12 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
         location: cleanText(formData.location),
       };
 
-      // التحقق من صحة البيانات
       const validation = validateProduct(cleanedData);
       if (!validation.isValid) {
         showErrors(validation.errors);
         return;
       }
 
-      // بناء بيانات التحديث
       const updateData = {
         title: cleanedData.title,
         description: cleanedData.description,
@@ -125,7 +121,6 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
         location: cleanedData.location,
       };
 
-      // رفع الصورة الجديدة فقط إذا تم اختيارها
       if (imageFile) {
         const imageError = validateImageFile(imageFile);
         if (imageError) {
@@ -137,7 +132,6 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
         updateData.image_urls = [imageUrl];
       }
 
-      // تحديث المنتج في قاعدة البيانات
       const { data: updatedProduct, error: dbError } = await supabase
         .from("ads")
         .update(updateData)
@@ -177,20 +171,20 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center" 
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-end sm:items-center justify-center" 
          style={{ paddingTop: '64px', paddingBottom: '80px' }}>
-      <div className="bg-white w-full sm:max-w-md sm:mx-4 sm:rounded-xl 
+      <div className="bg-white dark:bg-gray-900 w-full sm:max-w-md sm:mx-4 sm:rounded-xl 
                   max-h-[calc(100vh-144px)] sm:max-h-[calc(90vh-64px)]
                   rounded-t-2xl sm:rounded-b-xl
                   flex flex-col
                   animate-slide-up sm:animate-none">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-800">تعديل المنتج</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">تعديل المنتج</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-900 dark:text-white"
             disabled={loading}
             aria-label="إغلاق"
           >
@@ -206,9 +200,9 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
             
             {/* Error Messages */}
             {errors.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
                 {errors.map((error, index) => (
-                  <p key={index} className="text-red-600 text-sm">
+                  <p key={index} className="text-red-600 dark:text-red-400 text-sm">
                     • {error}
                   </p>
                 ))}
@@ -220,7 +214,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
               
               {/* Product Name */}
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   اسم المنتج *
                 </label>
                 <input
@@ -228,7 +222,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                   placeholder="مثال: هاتف ذكي جديد"
                   value={formData.title}
                   onChange={(e) => updateField("title", e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={loading}
                   required
                 />
@@ -236,7 +230,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
 
               {/* Price */}
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   السعر (بالليرة السورية) *
                 </label>
                 <input
@@ -245,7 +239,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                   min="1"
                   value={formData.price}
                   onChange={(e) => updateField("price", e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={loading}
                   required
                 />
@@ -253,7 +247,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
 
               {/* Description */}
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   وصف المنتج *
                 </label>
                 <textarea
@@ -261,7 +255,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                   rows="3"
                   value={formData.description}
                   onChange={(e) => updateField("description", e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                   disabled={loading}
                   required
                 />
@@ -269,13 +263,13 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
 
               {/* Category */}
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   فئة المنتج *
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => updateField("category", e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={loading}
                   required
                 >
@@ -288,13 +282,13 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
 
               {/* Location */}
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   الموقع *
                 </label>
                 <select
                   value={formData.location}
                   onChange={(e) => updateField("location", e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={loading}
                   required
                 >
@@ -309,7 +303,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
 
               {/* Image Upload */}
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   تغيير صورة المنتج (اختياري)
                 </label>
                 
@@ -327,15 +321,15 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                       type="file"
                       accept={ALLOWED_IMAGE_TYPES.join(',')}
                       onChange={handleImageChange}
-                      className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      className="w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
                       disabled={loading}
                     />
                     {imageFile && (
-                      <p className="text-green-600 text-xs mt-1 truncate">
+                      <p className="text-green-600 dark:text-green-400 text-xs mt-1 truncate">
                         تم اختيار: {imageFile.name}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       الحد الأقصى: 5MB | الأنواع: JPEG, PNG, WEBP, AVIF
                     </p>
                   </div>
@@ -346,7 +340,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-4 flex-shrink-0 bg-white">
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 bg-white dark:bg-gray-900">
           <div className="flex gap-3">
             <button
               onClick={handleUpdateProduct}
@@ -367,7 +361,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 py-3 rounded-lg font-medium transition-colors border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-3 rounded-lg font-medium transition-colors border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               إلغاء
             </button>

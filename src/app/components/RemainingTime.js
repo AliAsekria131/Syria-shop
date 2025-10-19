@@ -42,7 +42,9 @@ export default function RemainingTime({ expiresAt }) {
   }, [expiresAt]);
 
   return (
-    <div className={`text-sm ${isExpired ? 'text-red-500' : 'text-gray-500'}`}>
+    // التغيير: text-gray-500 -> text-gray-500 dark:text-gray-400
+    // اللون الأحمر (text-red-500) احتفظ به كما هو
+    <div className={`text-sm ${isExpired ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
       <Clock className="inline-block ml-1 mb-1 w-4 h-4" />
       {timeLeft}
     </div>

@@ -1,3 +1,4 @@
+// page.js
 "use client";
 
 import { createClient } from "../../../lib/supabase";
@@ -150,8 +151,11 @@ export default function Dashboard() {
   // عرض رسالة نجاح
   const showSuccessMessage = (message) => {
     const successDiv = document.createElement("div");
+    // bg-green-500 لا يتغير
+    // text-white لا يتغير
+    // shadow-lg -> dark:shadow-gray-900/50
     successDiv.className =
-      "fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50";
+      "fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg dark:shadow-gray-900/50 z-50";
     successDiv.textContent = message;
     document.body.appendChild(successDiv);
 
@@ -192,7 +196,9 @@ export default function Dashboard() {
   if (!user) {
     return (
       <AppLayout>
+        {/* bg-white -> dark:bg-gray-900 (خلفية الشاشة الكاملة يمكن أن تستفيد من ذلك، على الرغم من أن AppLayout قد يكون مسؤولاً) */}
         <div className="flex items-center justify-center min-h-screen">
+          {/* border-red-500 لا يتغير */}
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </AppLayout>
@@ -214,34 +220,45 @@ export default function Dashboard() {
 
       <div className="p-4 md:p-6 max-w-6xl mx-auto">
         {/* Mobile Header */}
-        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 mb-4 rounded-lg">
+        {/* bg-white -> dark:bg-gray-900 */}
+        {/* border-gray-200 -> dark:border-gray-700 */}
+        <div className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 mb-4 rounded-lg">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold text-gray-900">لوحة التحكم</h1>
+            {/* text-gray-900 -> dark:text-white */}
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">لوحة التحكم</h1>
             <button
               onClick={() => router.push("/settings")}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              // hover:bg-gray-100 -> dark:hover:bg-gray-700
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <Settings className="w-6 h-6 text-gray-700" />
+              {/* text-gray-700 -> dark:text-gray-200 */}
+              <Settings className="w-6 h-6 text-gray-700 dark:text-gray-200" />
             </button>
           </div>
         </div>
 
         {/* User Info Card */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-200">
+        {/* bg-white -> dark:bg-gray-900 */}
+        {/* shadow-sm -> dark:shadow-gray-900/30 */}
+        {/* border-gray-200 -> dark:border-gray-700 */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm dark:shadow-gray-900/30 p-4 mb-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
             <Image
               src={user.avatar_url || "/avatar.svg"}
               alt={user.full_name || "Avatar"}
               width={64}
               height={64}
-              className="rounded-full border border-gray-300 object-cover w-14 h-14"
+              // border-gray-300 -> dark:border-gray-600
+              className="rounded-full border border-gray-300 dark:border-gray-600 object-cover w-14 h-14"
               priority
             />
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-gray-900 truncate">
+              {/* text-gray-900 -> dark:text-white */}
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">
                 {user.full_name || "مستخدم جديد"}
               </h2>
-              <div className="flex flex-wrap gap-3 mt-1 text-sm text-gray-600">
+              {/* text-gray-600 -> dark:text-gray-300 */}
+              <div className="flex flex-wrap gap-3 mt-1 text-sm text-gray-600 dark:text-gray-300">
                 <span>{user.email}</span>
                 {user.phone && <span>• {user.phone}</span>}
                 {user.location && (
@@ -257,19 +274,27 @@ export default function Dashboard() {
 
         {/* Profile Completion Alert */}
         {(!user.full_name || !user.avatar_url || !user.location) && (
-          <div className="bg-yellow-50 rounded-xl shadow-sm p-4 mb-6 border border-yellow-200">
+          // bg-yellow-50 -> dark:bg-gray-800
+          // shadow-sm -> dark:shadow-gray-900/30
+          // border-yellow-200 -> dark:border-yellow-700 (لون ملون، لا يتغير لكن نجعله أغمق لتحسين التباين)
+          <div className="bg-yellow-50 dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/30 p-4 mb-6 border border-yellow-200 dark:border-yellow-700">
             <div className="flex items-center gap-3">
+              {/* bg-yellow-500 لا يتغير */}
               <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
+                {/* text-white لا يتغير */}
                 <span className="text-white font-bold text-lg">!</span>
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-gray-800">
+                {/* text-gray-800 -> dark:text-gray-100 */}
+                <div className="font-semibold text-gray-800 dark:text-gray-100">
                   ملفك الشخصي غير مكتمل
                 </div>
-                <div className="text-sm text-gray-600">
+                {/* text-gray-600 -> dark:text-gray-300 */}
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                   أكمل بياناتك للحصول على تجربة أفضل
                 </div>
               </div>
+              {/* الألوان الملونة لا تتغير */}
               <button
                 onClick={() => router.push("/settings")}
                 className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium flex-shrink-0"
@@ -281,14 +306,20 @@ export default function Dashboard() {
         )}
 
         {/* Products Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        {/* bg-white -> dark:bg-gray-900 */}
+        {/* shadow-sm -> dark:shadow-gray-900/30 */}
+        {/* border-gray-200 -> dark:border-gray-700 */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm dark:shadow-gray-900/30 border border-gray-200 dark:border-gray-700">
+          {/* border-gray-200 -> dark:border-gray-700 */}
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                {/* text-gray-900 -> dark:text-white */}
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   منتجاتي ({myAds.length})
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">
+                {/* text-gray-600 -> dark:text-gray-300 */}
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   إدارة وتعديل منتجاتك المنشورة
                 </p>
               </div>
@@ -298,12 +329,16 @@ export default function Dashboard() {
           <div className="p-6">
             {loading ? (
               <div className="text-center py-12">
+                {/* border-red-500 لا يتغير */}
                 <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600">جاري تحميل منتجاتك...</p>
+                {/* text-gray-600 -> dark:text-gray-300 */}
+                <p className="text-gray-600 dark:text-gray-300">جاري تحميل منتجاتك...</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
+                {/* text-red-600 لا يتغير */}
                 <p className="text-red-600 mb-4">{error}</p>
+                {/* الألوان الملونة لا تتغير */}
                 <button
                   onClick={() => window.location.reload()}
                   className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
@@ -313,15 +348,20 @@ export default function Dashboard() {
               </div>
             ) : myAds.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-full mx-auto mb-4 bg-gray-100 flex items-center justify-center">
+                {/* bg-gray-100 -> dark:bg-gray-800 */}
+                <div className="w-16 h-16 rounded-full mx-auto mb-4 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  {/* text-gray-400 لا يتغير */}
                   <Package className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                {/* text-gray-700 -> dark:text-gray-200 */}
+                <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   لا توجد منتجات بعد
                 </h3>
-                <p className="text-gray-500 mb-6">
+                {/* text-gray-500 -> dark:text-gray-400 */}
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
                   ابدأ ببيع منتجاتك الآن وزد دخلك!
                 </p>
+                {/* الألوان الملونة لا تتغير */}
                 <button
                   onClick={() => router.push("/add-product")}
                   className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium"
@@ -334,10 +374,15 @@ export default function Dashboard() {
                 {myAds.map((product) => (
                   <div
                     key={product.id}
-                    className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200"
+                    // bg-white -> dark:bg-gray-900
+                    // shadow-sm -> dark:shadow-gray-900/30
+                    // hover:shadow-md -> dark:hover:shadow-gray-900/30
+                    // border-gray-200 -> dark:border-gray-700
+                    className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm dark:shadow-gray-900/30 hover:shadow-md dark:hover:shadow-gray-900/30 transition-all duration-200 border border-gray-200 dark:border-gray-700"
                   >
                     <div className="flex gap-3">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex-shrink-0 overflow-hidden bg-gray-100 relative">
+                      {/* bg-gray-100 -> dark:bg-gray-800 */}
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex-shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-800 relative">
                         <Image
                           src={
                             product.image_urls?.[0] || "/placeholder-image.jpg"
@@ -350,9 +395,11 @@ export default function Dashboard() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-gray-900 text-base sm:text-lg line-clamp-1">
+                          {/* text-gray-900 -> dark:text-white */}
+                          <h3 className="font-semibold text-gray-900 dark:text-white text-base sm:text-lg line-clamp-1">
                             {product.title}
                           </h3>
+                          {/* الألوان الملونة لا تتغير */}
                           <div className="flex gap-2 flex-shrink-0 ml-2">
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -366,10 +413,12 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <p className="text-gray-600 text-sm line-clamp-2 mb-2">
+                        {/* text-gray-600 -> dark:text-gray-300 */}
+                        <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-2">
                           {product.description}
                         </p>
 
+                        {/* text-green-600 لا يتغير */}
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-lg sm:text-xl font-bold text-green-600">
                             {formatPrice(product.price)} {product.currency}
@@ -380,7 +429,8 @@ export default function Dashboard() {
                         </div>
 
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                          <div className="flex gap-4 text-xs text-gray-500">
+                          {/* text-gray-500 -> dark:text-gray-400 */}
+                          <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
                               <span className="truncate">
@@ -393,11 +443,13 @@ export default function Dashboard() {
                             </div>
                           </div>
 
+                          {/* الأزرار: الألوان الملونة لا تتغير، لكن نغير hover:bg الرمادي */}
                           <div className="flex gap-2">
                             <button
                               onClick={() =>
                                 router.push(`/product/${product.id}`)
                               }
+                              // hover:bg-blue-50 لا يتغير لأنه لون ملون
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="عرض"
                             >
@@ -405,6 +457,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => handleEditProduct(product)}
+                              // hover:bg-green-50 لا يتغير لأنه لون ملون
                               className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               title="تعديل"
                               disabled={product.status === "expired"}
@@ -418,6 +471,7 @@ export default function Dashboard() {
                                   product.image_urls[0]
                                 )
                               }
+                              // hover:bg-red-50 لا يتغير لأنه لون ملون
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="حذف"
                             >

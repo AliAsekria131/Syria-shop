@@ -146,9 +146,9 @@ export default function MainPage() {
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-red-600"
+                className="w-8 h-8 text-red-600 dark:text-red-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -161,7 +161,7 @@ export default function MainPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
               {error}
             </h3>
             <button
@@ -185,17 +185,17 @@ export default function MainPage() {
         {loading ? (
           <div className="text-center py-20">
             <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">جاري تحميل المنتجات...</p>
+            <p className="text-gray-600 dark:text-gray-300">جاري تحميل المنتجات...</p>
           </div>
         ) : ads.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
               لا توجد منتجات متاحة
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               كن أول من يضيف منتجاً في هذا القسم
             </p>
             <button
@@ -210,7 +210,7 @@ export default function MainPage() {
             {ads.map((product, index) => (
               <div
                 key={product.id}
-                className="bg-white rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 hover:shadow-lg hover:border-red-400 flex flex-col"
+                className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-gray-300 dark:border-gray-600 hover:shadow-lg dark:hover:shadow-gray-900/50 hover:border-red-400 dark:hover:border-red-500 flex flex-col"
                 onClick={() => router.push(`/product/${product.id}`)}
               >
                 <div className="relative p-2" style={{ aspectRatio: "7/6" }}>
@@ -218,14 +218,14 @@ export default function MainPage() {
                     src={product.image_urls?.[0] || "/placeholder-image.jpg"}
                     alt={product.title}
                     fill
-                    className="object-cover rounded-xl bg-gray-100"
+                    className="object-cover rounded-xl bg-gray-100 dark:bg-gray-800"
                     onError={handleImageError}
                     sizes="(max-width: 640px) 60vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 20vw"
                     priority={index < 8}
                     loading={index < 8 ? "eager" : "lazy"}
                     quality={75}
                   />
-                  <div className="absolute top-4 right-4 bg-black bg-opacity-60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+                  <div className="absolute top-4 right-4 bg-black/60 dark:bg-black/70 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
                     {product.category}
                   </div>
                 </div>
@@ -237,31 +237,31 @@ export default function MainPage() {
                       alt={product.seller_name || "بائع مجهول"}
                       width={20}
                       height={20}
-                      className="w-7 h-7 rounded-full object-cover bg-gray-200"
+                      className="w-7 h-7 rounded-full object-cover bg-gray-200 dark:bg-gray-700"
                       onError={handleImageError}
                       loading="lazy"
                     />
-                    <span className="mr-2 truncate max-w-[120px]">
+                    <span className="mr-2 truncate max-w-[120px] text-gray-900 dark:text-white">
                       {product.full_name || "بائع مجهول"}
                     </span>
                   </div>
 
                   <div className="mb-2 flex flex-row flex-wrap justify-between items-center">
-                    <div className="font-semibold text-lg overflow-hidden text-ellipsis">
+                    <div className="font-semibold text-lg overflow-hidden text-ellipsis text-gray-900 dark:text-white">
                       {product.title}
                     </div>
                     <div className="flex items-center justify-between text-sm font-medium ml-2">
-                      <span className="text-lg font-bold">
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
                         {formatPrice(product.price)} ل.س
                       </span>
                     </div>
                   </div>
 
-                  <div className="text-sm text-gray-500 overflow-hidden text-ellipsis">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 overflow-hidden text-ellipsis">
                     {product.description}
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100 mt-auto">
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
                     <div className="flex items-center gap-1 flex-1 min-w-0">
                       <MapPin className="w-3 h-3 flex-shrink-0" />
                       <span className="truncate">{product.location}</span>

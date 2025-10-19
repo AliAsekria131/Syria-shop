@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import MessagesIcon from "./MessagesIcon";
 import MessageToast from "./MessageToast";
+import ThemeToggle from './ThemeToggle';
 
 export default function AppLayout({ children }) {
   const supabase = useMemo(() => createClient(), []);
@@ -30,6 +31,7 @@ export default function AppLayout({ children }) {
   const [authError, setAuthError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const isSearchPage = pathname === "/search";
+  // const isChatPage = pathname === "/chat/{"
 
   useEffect(() => {
     let mounted = true;
@@ -120,9 +122,9 @@ export default function AppLayout({ children }) {
 
   if (authError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <p className="text-red-600">{authError}</p>
+          <p className="text-red-600 dark:text-red-400">{authError}</p>
           <button
             onClick={() => router.replace("/auth")}
             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -136,7 +138,7 @@ export default function AppLayout({ children }) {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -147,8 +149,8 @@ export default function AppLayout({ children }) {
       onClick={onClick}
       className={`p-2.5 rounded-lg transition-colors ${
         isActive(path)
-          ? "bg-gray-100 text-black"
-          : "text-gray-600 hover:bg-gray-50"
+          ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white"
+          : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
       }`}
       aria-label={label}
       aria-current={isActive(path) ? "page" : undefined}
@@ -158,11 +160,11 @@ export default function AppLayout({ children }) {
   );
 
   return (
-    <div className="min-h-screen bg-white" dir="rtl" lang="ar">
-      {/* Desktop Sidebar - تصغير من w-20 إلى w-16 */}
-      <div className="hidden md:block fixed right-0 top-0 h-full w-16 bg-white border-l border-gray-200 z-50">
+    <div className="min-h-screen bg-white dark:bg-gray-900" dir="rtl" lang="ar">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block fixed right-0 top-0 h-full w-16 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 z-50">
         <div className="flex flex-col items-center py-4 h-full">
-          {/* Logo - تصغير من 44x44 إلى 36x36 */}
+          {/* Logo */}
           <button
             onClick={() => router.push("/main")}
             className="mb-6"
@@ -178,7 +180,7 @@ export default function AppLayout({ children }) {
             />
           </button>
 
-          {/* Navigation Buttons - تصغير المسافات من gap-4 إلى gap-3 */}
+          {/* Navigation Buttons */}
           <nav
             className="flex flex-col gap-3 mb-auto"
             aria-label="القائمة الرئيسية"
@@ -210,10 +212,11 @@ export default function AppLayout({ children }) {
           </nav>
 
           {/* Settings Menu */}
-          <div className="relative settings-menu-container">
+          <div className="flex flex-col justify-center relative settings-menu-container">
+            <ThemeToggle />
             <button
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-              className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               aria-label="الإعدادات"
               aria-expanded={showSettingsMenu}
             >
@@ -221,16 +224,16 @@ export default function AppLayout({ children }) {
             </button>
 
             {showSettingsMenu && (
-              <div className="absolute right-0 bottom-14 w-72 bg-white rounded-xl shadow-lg border py-2 z-50">
+              <div className="absolute right-0 bottom-14 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-700 py-2 z-50">
                 <button
                   onClick={() => {
                     router.push("/settings");
                     setShowSettingsMenu(false);
                   }}
-                  className="w-full px-4 py-2.5 text-right hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  className="w-full px-4 py-2.5 text-right hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3"
                 >
-                  <Settings className="w-5 h-5 text-gray-500" />
-                  <span>الإعدادات</span>
+                  <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <span className="text-gray-900 dark:text-white">الإعدادات</span>
                 </button>
               </div>
             )}
@@ -238,31 +241,29 @@ export default function AppLayout({ children }) {
         </div>
       </div>
 
-      {/* Main Content - تعديل الهامش من md:mr-20 إلى md:mr-16 */}
+      {/* Main Content */}
       <div className="md:mr-16">
-        {/* Desktop Header - تصغير الـ padding */}
-        <header className="hidden md:block sticky top-0 z-40 bg-white border-b border-gray-200">
+        {/* Desktop Header */}
+        <header className="hidden md:block sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           {!isSearchPage && (
             <div className="px-3 py-2.5">
               <div className="flex items-center gap-3">
-                {/* Search Bar - تصغير من py-4 إلى py-2.5 */}
-
+                {/* Search Bar */}
                 <form onSubmit={handleSearch} className="flex-1 relative">
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none" />
                   <input
                     type="search"
                     placeholder="ابحث في المنتجات..."
                     value={searchInputValue}
                     onChange={(e) => setSearchInputValue(e.target.value)}
                     maxLength={100}
-                    className="w-full pr-10 pl-4 py-2.5 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none text-sm"
+                    className="w-full pr-10 pl-4 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 transition-colors rounded-lg border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:outline-none text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                     aria-label="البحث في المنتجات"
                   />
                 </form>
 
                 {/* user menu */}
                 <UserProfileMenu user={user} onSignOut={handleSignOut} />
-
               </div>
             </div>
           )}
@@ -274,7 +275,7 @@ export default function AppLayout({ children }) {
 
       {/* Mobile Bottom Navigation */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50 h-[70px]"
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-2 z-50 h-[70px]"
         aria-label="القائمة السفلية"
       >
         <div className="flex items-center justify-around h-full">
@@ -289,7 +290,9 @@ export default function AppLayout({ children }) {
               key={path}
               onClick={() => router.push(path)}
               className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-                isActive(path) ? "bg-[#3f47cc] text-white" : "text-gray-600"
+                isActive(path) 
+                  ? "bg-[#3f47cc] text-white" 
+                  : "text-gray-600 dark:text-gray-300"
               }`}
               aria-label={label}
               aria-current={isActive(path) ? "page" : undefined}

@@ -336,8 +336,10 @@ useEffect(() => {
       <AppLayout>
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
+            {/* border-blue-500 لا يتغير */}
             <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 border-blue-500"></div>
-            <p className="text-gray-600">جاري تحميل المحادثة...</p>
+            {/* text-gray-600 -> dark:text-gray-300 */}
+            <p className="text-gray-600 dark:text-gray-300">جاري تحميل المحادثة...</p>
           </div>
         </div>
       </AppLayout>
@@ -346,17 +348,20 @@ useEffect(() => {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-screen bg-gray-50">
+      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-800">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        {/* bg-white -> dark:bg-gray-900, border-gray-200 -> dark:border-gray-700 */}
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
           <div className="max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
+                {/* hover:bg-gray-100 -> dark:hover:bg-gray-700 */}
                 <button
                   onClick={() => router.back()}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 >
-                  <ArrowLeft className="w-5 h-5 text-gray-700" />
+                  {/* text-gray-700 -> dark:text-gray-200 */}
+                  <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
                 </button>
                 
                 <Image
@@ -364,21 +369,26 @@ useEffect(() => {
                   alt={otherUser?.full_name || "مستخدم"}
                   width={40}
                   height={40}
-                  className="rounded-full object-cover bg-gray-100"
+                  // bg-gray-100 -> dark:bg-gray-800
+                  className="rounded-full object-cover bg-gray-100 dark:bg-gray-800"
                   priority
                   onError={(e) => { e.target.src = "/avatar.svg"; }}
                 />
                 
                 <div>
-                  <h2 className="font-semibold text-gray-900">
+                  {/* text-gray-900 -> dark:text-white */}
+                  <h2 className="font-semibold text-gray-900 dark:text-white">
                     {otherUser?.full_name || "مستخدم"}
                   </h2>
-                  <p className="text-xs text-gray-500">متصل الآن</p>
+                  {/* text-gray-500 -> dark:text-gray-400 */}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">متصل الآن</p>
                 </div>
               </div>
 
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <MoreVertical className="w-5 h-5 text-gray-700" />
+              {/* hover:bg-gray-100 -> dark:hover:bg-gray-700 */}
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                {/* text-gray-700 -> dark:text-gray-200 */}
+                <MoreVertical className="w-5 h-5 text-gray-700 dark:text-gray-200" />
               </button>
             </div>
           </div>
@@ -389,7 +399,9 @@ useEffect(() => {
           <div className="max-w-4xl mx-auto px-4 py-4">
             {messages.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">لا توجد رسائل بعد</p>
+                {/* text-gray-500 -> dark:text-gray-400 */}
+                <p className="text-gray-500 dark:text-gray-400">لا توجد رسائل بعد</p>
+                {/* text-gray-400 لا يتغير */}
                 <p className="text-sm text-gray-400 mt-2">ابدأ المحادثة الآن!</p>
               </div>
             ) : (
@@ -405,14 +417,15 @@ useEffect(() => {
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                           isOwn
-                            ? "bg-blue-500 text-white rounded-br-sm"
-                            : "bg-white text-gray-900 rounded-bl-sm shadow-sm"
+                            ? "bg-blue-500 text-white rounded-br-sm" // الألوان الملونة لا تتغير
+                            // bg-white -> dark:bg-gray-900, text-gray-900 -> dark:text-white, shadow-sm -> dark:shadow-gray-900/30
+                            : "bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-bl-sm shadow-sm dark:shadow-gray-900/30" 
                         }`}
                       >
                         <p className="text-sm break-words">{message.content}</p>
                         <p
                           className={`text-xs mt-1 ${
-                            isOwn ? "text-blue-100" : "text-gray-400"
+                            isOwn ? "text-blue-100" : "text-gray-400" // text-gray-400 لا يتغير
                           }`}
                         >
                           {formatTime(message.created_at)}
@@ -428,7 +441,8 @@ useEffect(() => {
         </div>
 
         {/* Input Area */}
-        <div className="bg-white border-t border-gray-200 sticky bottom-0 ">
+        {/* bg-white -> dark:bg-gray-900, border-gray-200 -> dark:border-gray-700 */}
+        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 ">
           <div className="max-w-4xl mx-auto px-4 py-3">
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <input
@@ -436,7 +450,8 @@ useEffect(() => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="اكتب رسالة..."
-                className="flex-1 px-4 py-3 bg-gray-100 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                // bg-gray-100 -> dark:bg-gray-800
+                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={sending}
               />
               <button
@@ -444,8 +459,9 @@ useEffect(() => {
                 disabled={!newMessage.trim() || sending}
                 className={`p-3 rounded-full transition-all ${
                   newMessage.trim() && !sending
-                    ? "bg-blue-500 hover:bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "bg-blue-500 hover:bg-blue-600 text-white" // الألوان الملونة لا تتغير
+                    // bg-gray-200 -> dark:bg-gray-700
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed" // text-gray-400 لا يتغير
                 }`}
               >
                 <Send className="w-5 h-5" />

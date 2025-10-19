@@ -59,7 +59,7 @@ export default function ProfileCompletionBanner({ user, supabase }) {
   if (!showBanner || dismissed) return null;
 
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg dark:shadow-gray-900/50">
       <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3 flex-1 min-w-0">

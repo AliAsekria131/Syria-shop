@@ -53,7 +53,7 @@ export function CategoryFilter({ onAdsUpdate, onError }) {
             className={`flex-shrink-0 px-3 py-1 rounded-sm transition-colors whitespace-nowrap focus:outline-none ${
               selectedCategory === category
                 ? "bg-red-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-red-500 hover:text-white"
             }`}
           >
             {category}

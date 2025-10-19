@@ -78,21 +78,21 @@ export default function ProductDetails({
       <Star
         key={i}
         className={`w-4 h-4 ${
-          i < rating ? "text-yellow-400 fill-current" : "text-gray-300"
+          i < rating ? "text-yellow-400 fill-current" : "text-gray-300 dark:text-gray-600"
         }`}
       />
     ));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
           {/* Main Image Section - Pinterest Style */}
           <div className="lg:col-span-2">
-            <div className="relative bg-white rounded-2xl overflow-hidden shadow-sm sticky top-6">
+            <div className="relative bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-gray-900/50 sticky top-6">
               <div className="aspect-[3/4] relative">
   <Image
     src={product.image_urls?.[0] || "/placeholder.jpg"}
@@ -106,30 +106,30 @@ export default function ProductDetails({
                 <div className="absolute top-4 left-4 flex flex-col gap-2">
                   <button
                     onClick={() => setShowMobileComments(true)}
-                    className="bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2"
+                    className="bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg dark:shadow-gray-900/50 hover:shadow-xl transition-shadow flex items-center gap-2"
                   >
-                    <MessageCircle className="w-5 h-5" />
-                    <span className="text-sm font-medium">{commentsCount}</span>
+                    <MessageCircle className="w-5 h-5 text-gray-900 dark:text-white" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{commentsCount}</span>
                   </button>
                   
                   <button
                     onClick={handleShare}
-                    className="bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow"
+                    className="bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg dark:shadow-gray-900/50 hover:shadow-xl transition-shadow"
                   >
-                    <Share2 className="w-5 h-5" />
+                    <Share2 className="w-5 h-5 text-gray-900 dark:text-white" />
                   </button>
 
                   <button
                     onClick={() => setIsLiked(!isLiked)}
-                    className="bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow"
+                    className="bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg dark:shadow-gray-900/50 hover:shadow-xl transition-shadow"
                   >
-                    <Heart className={`w-5 h-5 ${isLiked ? "text-red-500 fill-current" : ""}`} />
+                    <Heart className={`w-5 h-5 ${isLiked ? "text-red-500 fill-current" : "text-gray-900 dark:text-white"}`} />
                   </button>
                 </div>
 
                 {/* Category Badge */}
                 <div className="absolute top-4 right-4">
-                  <span className="bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                  <span className="bg-black/70 dark:bg-white/20 text-white px-3 py-1 rounded-full text-sm">
                     {product.category}
                   </span>
                 </div>
@@ -140,8 +140,8 @@ export default function ProductDetails({
           {/* Product Info Section */}
           <div className="lg:col-span-1 space-y-6">
             {/* Product Details */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h1 className="text-2xl font-bold text-gray-900 mb-3">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-gray-900/50">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                 {product.title}
               </h1>
               
@@ -149,24 +149,24 @@ export default function ProductDetails({
                 {formatPrice(product.price)} {product.currency}
               </div>
 
-              <div className="flex items-center gap-2 text-gray-600 mb-4">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mb-4">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">{product.location}</span>
               </div>
 
-              <p className="text-gray-700 leading-relaxed mb-6">
+              <p className="text-gray-700 dark:text-gray-200 leading-relaxed mb-6">
                 {product.description}
               </p>
 
               {/* Seller Info - Pinterest Style */}
-              <div className="border-t pt-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="font-bold text-gray-600">
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="font-bold text-gray-600 dark:text-gray-300">
                       {seller.full_name?.charAt(0) || "؟"}
                     </span>
                   </div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {seller.full_name || "البائع"}
                   </span>
                 </div>
@@ -207,8 +207,8 @@ export default function ProductDetails({
 
             {/* Desktop Comments Section */}
             <div className="hidden lg:block">
-              <div id="comments-section" className="bg-white rounded-2xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <div id="comments-section" className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-gray-900/50">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
                   <MessageCircle className="w-5 h-5" />
                   التعليقات ({commentsCount})
                 </h3>
@@ -216,22 +216,22 @@ export default function ProductDetails({
                 {/* Comments List */}
                 <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                   {mockComments.map((comment) => (
-                    <div key={comment.id} className="border-b border-gray-100 pb-4">
+                    <div key={comment.id} className="border-b border-gray-100 dark:border-gray-700 pb-4">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-bold">
+                        <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-gray-900 dark:text-white">
                             {comment.user.charAt(0)}
                           </span>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm">{comment.user}</span>
-                            <span className="text-xs text-gray-500">{comment.date}</span>
+                            <span className="font-medium text-sm text-gray-900 dark:text-white">{comment.user}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{comment.date}</span>
                           </div>
                           <div className="flex mb-1">
                             {renderStars(comment.rating)}
                           </div>
-                          <p className="text-sm text-gray-700">{comment.comment}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-200">{comment.comment}</p>
                         </div>
                       </div>
                     </div>
@@ -246,7 +246,7 @@ export default function ProductDetails({
                         key={star}
                         onClick={() => setNewRating(star)}
                         className={`text-lg ${
-                          star <= newRating ? "text-yellow-400" : "text-gray-300"
+                          star <= newRating ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"
                         }`}
                       >
                         ★
@@ -258,7 +258,7 @@ export default function ProductDetails({
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="اكتب تعليقك..."
-                    className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows="3"
                   />
                   
@@ -276,12 +276,12 @@ export default function ProductDetails({
 
           {/* Related Products Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-6">
-              <h3 className="text-lg font-bold mb-4">منتجات مشابهة</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-gray-900/50 sticky top-6">
+              <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">منتجات مشابهة</h3>
               
               <div className="space-y-4">
                 {relatedProducts.slice(0, 6).map((item) => (
-                  <div key={item.id} className="flex gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <div key={item.id} className="flex gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
   <Image
     src={item.image_urls?.[0] || "/placeholder.jpg"}
     alt={item.title}
@@ -291,13 +291,13 @@ export default function ProductDetails({
     sizes="64px"
   />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm line-clamp-2 mb-1">
+                      <h4 className="font-medium text-sm line-clamp-2 mb-1 text-gray-900 dark:text-white">
                         {item.title}
                       </h4>
                       <p className="text-green-600 font-bold text-sm">
                         {formatPrice(item.price)} {item.currency}
                       </p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {item.location}
                       </p>
@@ -312,38 +312,38 @@ export default function ProductDetails({
 
       {/* Mobile Comments Modal */}
       {showMobileComments && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/50" style={{ zIndex: 9999 }}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl h-[90vh] flex flex-col">
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/50 dark:bg-white/10" style={{ zIndex: 9999 }}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-bold">التعليقات ({commentsCount})</h3>
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">التعليقات ({commentsCount})</h3>
               <button
                 onClick={() => setShowMobileComments(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-gray-900 dark:text-white" />
               </button>
             </div>
 
             {/* Comments List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {mockComments.map((comment) => (
-                <div key={comment.id} className="border-b border-gray-100 pb-4">
+                <div key={comment.id} className="border-b border-gray-100 dark:border-gray-700 pb-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="font-bold text-sm">
+                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-sm text-gray-900 dark:text-white">
                         {comment.user.charAt(0)}
                       </span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">{comment.user}</span>
-                        <span className="text-sm text-gray-500">{comment.date}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{comment.user}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{comment.date}</span>
                       </div>
                       <div className="flex mb-2">
                         {renderStars(comment.rating)}
                       </div>
-                      <p className="text-gray-700">{comment.comment}</p>
+                      <p className="text-gray-700 dark:text-gray-200">{comment.comment}</p>
                     </div>
                   </div>
                 </div>
@@ -351,14 +351,14 @@ export default function ProductDetails({
             </div>
 
             {/* Add Comment Form - Fixed at bottom */}
-            <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div className="flex gap-1 mb-3">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     onClick={() => setNewRating(star)}
                     className={`text-xl ${
-                      star <= newRating ? "text-yellow-400" : "text-gray-300"
+                      star <= newRating ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"
                     }`}
                   >
                     ★
@@ -371,7 +371,7 @@ export default function ProductDetails({
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="اكتب تعليقك..."
-                  className="flex-1 p-3 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 p-3 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows="2"
                 />
                 <button
@@ -389,60 +389,3 @@ export default function ProductDetails({
     </div>
   );
 }
-
-/* 
-Usage Example:
-
-import ProductDetails from './ProductDetails.client';
-
-const ExampleUsage = () => {
-  const mockProduct = {
-    id: 1,
-    title: "iPhone 14 Pro Max جديد بالكرتونة",
-    description: "آيفون 14 برو ماكس جديد، لون أزرق عميق، ذاكرة 256 جيجا، مع جميع الملحقات الأصلية والضمان.",
-    price: 850000,
-    currency: "ل.س",
-    category: "هواتف ذكية",
-    location: "دمشق - المزة",
-    image_urls: [
-      "https://example.com/iphone1.jpg",
-      "https://example.com/iphone2.jpg"
-    ]
-  };
-
-  const mockSeller = {
-    full_name: "أحمد محمد",
-    phone: "0991234567",
-    email: "ahmed@example.com"
-  };
-
-  const mockRelatedProducts = [
-    {
-      id: 2,
-      title: "iPhone 13 Pro",
-      price: 750000,
-      currency: "ل.س",
-      location: "دمشق",
-      image_urls: ["https://example.com/iphone13.jpg"]
-    },
-    {
-      id: 3,
-      title: "Samsung Galaxy S23",
-      price: 700000,
-      currency: "ل.س", 
-      location: "حلب",
-      image_urls: ["https://example.com/galaxy.jpg"]
-    }
-  ];
-
-  return (
-    <ProductDetails
-      product={mockProduct}
-      seller={mockSeller}
-      relatedProducts={mockRelatedProducts}
-      currentUser={{ id: 1, name: "المستخدم الحالي" }}
-      commentsCount={5}
-    />
-  );
-};
-*/
