@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -137,15 +136,8 @@ const extractFileName = (oldAvatar) => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">تعديل الملف الشخصي</h2>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <X className="w-6 h-6 text-gray-500" />
-        </button>
+    <div className="p-5 h-[calc(100vh+5px)]">
+      <div className="flex items-center justify-between">
       </div>
 
       {error && (
