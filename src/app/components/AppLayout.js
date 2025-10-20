@@ -31,8 +31,17 @@ export default function AppLayout({ children }) {
   const [authError, setAuthError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const isSearchPage = pathname === "/search";
-  // const isChatPage = pathname === "/chat/{"
+  const isChatPage = pathname === "/chat";
 
+
+	function notPageAllow(){
+		if(pathname.startsWith("/search") || pathname.startsWith("/chat"))
+			return true
+		else
+			return false
+	}
+	
+	
   useEffect(() => {
     let mounted = true;
 
@@ -245,7 +254,7 @@ export default function AppLayout({ children }) {
       <div className="md:mr-16">
         {/* Desktop Header */}
         <header className="hidden md:block sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-          {!isSearchPage && (
+          {!notPageAllow && (
             <div className="px-3 py-2.5">
               <div className="flex items-center gap-3">
                 {/* Search Bar */}
@@ -301,7 +310,9 @@ export default function AppLayout({ children }) {
             </button>
           ))}
         </div>
-        <MessagesIcon currentUser={user} isMobile={true} />
+		{isChatPage &&(
+			<MessagesIcon currentUser={user} isMobile={true} />)
+			}
       </nav>
 
       <MessageToast currentUser={user} />

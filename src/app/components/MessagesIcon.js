@@ -27,6 +27,7 @@ export default function MessagesIcon({ currentUser, isMobile = false }) {
     const interval = setInterval(fetchCount, 10000);
     return () => clearInterval(interval);
   }, [currentUser]);
+  
 
   if (isMobile) {
     if (pathname?.startsWith('/chat')) {
