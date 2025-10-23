@@ -105,6 +105,7 @@ export function useAuth() {
         setIsAuthenticated(false);
       } finally {
         setLoading(false);
+        
       }
     };
 

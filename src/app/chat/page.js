@@ -1,7 +1,7 @@
 // chat/page.js
 "use client";
 
-import { createClient } from '../../../lib/supabase';
+import { createClient } from "../../../lib/supabase";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -12,15 +12,17 @@ import AppLayout from "../components/AppLayout";
 export default function ChatListPage() {
   const supabase = createClient();
   const router = useRouter();
-  
+
   const [currentUser, setCurrentUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         router.push("/main");
         return;
@@ -57,9 +59,8 @@ export default function ChatListPage() {
         // جلب آخر رسالة لكل محادثة
         const conversationsWithDetails = await Promise.all(
           (convData || []).map(async (conv) => {
-            const otherUserId = conv.buyer_id === currentUser.id 
-              ? conv.seller_id 
-              : conv.buyer_id;
+            const otherUserId =
+              conv.buyer_id === currentUser.id ? conv.seller_id : conv.buyer_id;
 
             // جلب بيانات المستخدم الآخر
             const { data: otherUser } = await supabase
@@ -80,9 +81,9 @@ export default function ChatListPage() {
             return {
               ...conv,
               otherUser: otherUser || { id: otherUserId, full_name: "مستخدم" },
-              lastMessage: lastMessage || null
+              lastMessage: lastMessage || null,
             };
-          })
+          }),
         );
 
         setConversations(conversationsWithDetails);
@@ -98,7 +99,7 @@ export default function ChatListPage() {
 
   const formatTime = (dateString) => {
     if (!dateString) return "";
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
@@ -106,14 +107,14 @@ export default function ChatListPage() {
     if (diffInHours < 24) {
       return date.toLocaleTimeString("ar-SY", {
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
       });
     } else if (diffInHours < 48) {
       return "أمس";
     } else {
       return date.toLocaleDateString("ar-SY", {
         month: "short",
-        day: "numeric"
+        day: "numeric",
       });
     }
   };
@@ -126,7 +127,9 @@ export default function ChatListPage() {
             {/* border-blue-500 لا يتغير */}
             <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 border-blue-500"></div>
             {/* text-gray-600 -> dark:text-gray-300 */}
-            <p className="text-gray-600 dark:text-gray-300">جاري تحميل المحادثات...</p>
+            <p className="text-gray-600 dark:text-gray-300">
+              جاري تحميل المحادثات...
+            </p>
           </div>
         </div>
       </AppLayout>
@@ -149,7 +152,9 @@ export default function ChatListPage() {
             {/* text-gray-300 لا يتغير (لون فاتح) */}
             <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             {/* text-gray-500 -> dark:text-gray-400 */}
-            <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">لا توجد محادثات بعد</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">
+              لا توجد محادثات بعد
+            </p>
             {/* text-gray-400 لا يتغير (لون فاتح) */}
             <p className="text-gray-400 text-sm">
               ابدأ محادثة جديدة من خلال التواصل مع البائعين
@@ -158,7 +163,6 @@ export default function ChatListPage() {
         ) : (
           <div className="space-y-2">
             {conversations.map((conv) => (
-			
               <div
                 key={conv.id}
                 onClick={() => router.push(`/chat/${conv.id}`)}
@@ -175,14 +179,19 @@ export default function ChatListPage() {
                     height={48}
                     // bg-gray-100 -> dark:bg-gray-800
                     className="rounded-full object-cover bg-gray-100 dark:bg-gray-800"
-                    onError={(e) => { e.target.src = "/avatar.svg"; }}
+                    onError={(e) => {
+                      e.target.src = "/avatar.svg";
+                    }}
                   />
-                    {/* النقطة الحمراء */}
-  {((currentUser.id === conv.buyer_id && conv.unread_count_buyer > 0) ||
-    (currentUser.id === conv.seller_id && conv.unread_count_seller > 0)) && (
-    // border-white -> dark:border-gray-900 (لتتناسب مع خلفية البطاقة الداكنة)
-    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
-  )}
+
+                  {/* النقطة الحمراء */}
+                  {((currentUser.id === conv.buyer_id &&
+                    conv.unread_count_buyer > 0) ||
+                    (currentUser.id === conv.seller_id &&
+                      conv.unread_count_seller > 0)) && (
+                    // border-white -> dark:border-gray-900 (لتتناسب مع خلفية البطاقة الداكنة)
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       {/* text-gray-900 -> dark:text-white */}
@@ -191,7 +200,9 @@ export default function ChatListPage() {
                       </h3>
                       {/* text-gray-500 -> dark:text-gray-400 */}
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatTime(conv.lastMessage?.created_at || conv.created_at)}
+                        {formatTime(
+                          conv.lastMessage?.created_at || conv.created_at,
+                        )}
                       </span>
                     </div>
                     {/* text-gray-600 -> dark:text-gray-300 */}

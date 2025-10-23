@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import MessagesIcon from "./MessagesIcon";
 import MessageToast from "./MessageToast";
-import ThemeToggle from './ThemeToggle';
+import ThemeToggle from "./ThemeToggle";
 
 export default function AppLayout({ children }) {
   const supabase = useMemo(() => createClient(), []);
@@ -33,15 +33,12 @@ export default function AppLayout({ children }) {
   const isSearchPage = pathname === "/search";
   const isChatPage = pathname === "/chat";
 
+  function notPageAllow() {
+    if (pathname.startsWith("/search") || pathname.startsWith("/chat"))
+      return true;
+    else return false;
+  }
 
-	function notPageAllow(){
-		if(pathname.startsWith("/search") || pathname.startsWith("/chat"))
-			return true
-		else
-			return false
-	}
-	
-	
   useEffect(() => {
     let mounted = true;
 
@@ -110,10 +107,10 @@ export default function AppLayout({ children }) {
       e.preventDefault();
       const sanitized = searchInputValue.trim().substring(0, 100);
       router.push(
-        sanitized ? `/search?q=${encodeURIComponent(sanitized)}` : "/search"
+        sanitized ? `/search?q=${encodeURIComponent(sanitized)}` : "/search",
       );
     },
-    [searchInputValue, router]
+    [searchInputValue, router],
   );
 
   const handleSignOut = useCallback(async () => {
@@ -242,7 +239,9 @@ export default function AppLayout({ children }) {
                   className="w-full px-4 py-2.5 text-right hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3"
                 >
                   <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  <span className="text-gray-900 dark:text-white">الإعدادات</span>
+                  <span className="text-gray-900 dark:text-white">
+                    الإعدادات
+                  </span>
                 </button>
               </div>
             )}
@@ -254,7 +253,7 @@ export default function AppLayout({ children }) {
       <div className="md:mr-16">
         {/* Desktop Header */}
         <header className="hidden md:block sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-          {!notPageAllow && (
+          {!notPageAllow() && (
             <div className="px-3 py-2.5">
               <div className="flex items-center gap-3">
                 {/* Search Bar */}
@@ -299,8 +298,8 @@ export default function AppLayout({ children }) {
               key={path}
               onClick={() => router.push(path)}
               className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-                isActive(path) 
-                  ? "bg-[#3f47cc] text-white" 
+                isActive(path)
+                  ? "bg-[#3f47cc] text-white"
                   : "text-gray-600 dark:text-gray-300"
               }`}
               aria-label={label}
@@ -310,9 +309,7 @@ export default function AppLayout({ children }) {
             </button>
           ))}
         </div>
-		{isChatPage &&(
-			<MessagesIcon currentUser={user} isMobile={true} />)
-			}
+        {isChatPage && <MessagesIcon currentUser={user} isMobile={true} />}
       </nav>
 
       <MessageToast currentUser={user} />
