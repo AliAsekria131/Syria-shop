@@ -18,7 +18,7 @@ const formatDate = (date) => new Date(date).toLocaleDateString("ar-SY", {
   day: "numeric",
 });
 
-// ======== مكون قائمة منسدلة (Select) معاد استخدامه ========
+// ======== مكون قائمة منسدلة معاد استخدامه ========
 function FilterSelect({ value, onChange, options, placeholder, label, className = "" }) {
   return (
     <div className={className}>
@@ -194,32 +194,6 @@ export default function SearchComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ======== جلب بيانات المستخدم مباشرة ========
-  const [user, setUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      } finally {
-        setUserLoading(false);
-      }
-    };
-
-    fetchUser();
-
-    // الاستماع لتغييرات حالة المصادقة
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   // ======== الحالات ========
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -233,18 +207,27 @@ export default function SearchComponent() {
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
 
-  // ======== جلب الإعلانات ========
+  // ======== جلب الإعلانات باستخدام RPC ========
   const fetchAds = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
 
       let query = supabase.rpc("get_all_ads");
 
+      // تطبيق فلتر البحث النصي
       if (searchQuery.trim()) {
         query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
-      if (filters.category) query = query.eq("category", filters.category);
-      if (filters.location) query = query.eq("location", filters.location);
+
+      // تطبيق فلتر الفئة
+      if (filters.category) {
+        query = query.eq("category", filters.category);
+      }
+
+      // تطبيق فلتر الموقع
+      if (filters.location) {
+        query = query.eq("location", filters.location);
+      }
 
       const { data, error } = await query;
       if (error) throw error;
@@ -329,7 +312,7 @@ export default function SearchComponent() {
               <Filter className="w-5 h-5" />
             </button>
             <SearchInput value={searchQuery} onChange={setSearchQuery} loading={searchLoading} />
-            <UserProfileMenu user={user} onSignOut={handleSignOut} />
+            <UserProfileMenu onSignOut={handleSignOut} />
           </div>
         </div>
         {showFilters && (
