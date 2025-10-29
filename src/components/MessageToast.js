@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '../../../lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { X } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';

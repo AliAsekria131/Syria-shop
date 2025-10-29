@@ -1,11 +1,11 @@
 // add-product/page.js
 "use client";
 
-import { createClient } from '../../../lib/supabase';
+import { createClient } from '@/lib/supabase';
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Camera, FileImage, X } from "lucide-react";
-import AppLayout from "../components/AppLayout";
+import AppLayout from "@/components/AppLayout";
 import Image from 'next/image';
 import { compressImage } from '@/utils/compressImage';
 

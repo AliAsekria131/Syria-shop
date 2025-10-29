@@ -1,19 +1,12 @@
-import { createClient } from "./supabase";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * تسجيل حساب جديد
  */
-export async function signUp(email, password, metadata = {}) {
+export async function signUp(email, password) {
   const supabase = createClient();
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
-      data: metadata, // بيانات إضافية (full_name, phone, etc.)
-    },
-  });
+
 
   if (error) throw error;
   return data;

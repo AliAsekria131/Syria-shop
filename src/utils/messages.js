@@ -1,5 +1,5 @@
 // utils/messages.js
-import { createClient } from '../../lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 
 // جلب عدد الرسائل غير المقروءة للمستخدم
 export const getUnreadMessagesCount = async (userId) => {

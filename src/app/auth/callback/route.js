@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerSupabaseClient } from '../../../../lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
 /**
  * معالجة Callback من Supabase Auth

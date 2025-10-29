@@ -1,7 +1,7 @@
 // product/[id]/page.js
 "use client";
 
-import { createClient } from "../../../../lib/supabase";
+import { createClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -14,16 +14,16 @@ import {
   MessageCircle,
 } from "lucide-react";
 
-import Comments from "../../components/Comments";
+import Comments from "@/components/Comments";
 
-import AppLayout from "../../components/AppLayout";
+import AppLayout from "@/components/AppLayout";
 
 import {
   addLike,
   removeLike,
   checkLike,
   getLikesCount,
-} from "../../../utils/likes";
+} from "@/utils/likes";
 
 export default function ProductDetailsPage() {
   const supabase = createClient();

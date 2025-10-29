@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { createServerSupabaseClient } from './supabase'
+import { createServerSupabaseClient } from '@/supabase/client'
 
 /**
  * الحصول على الجلسة من Server Component

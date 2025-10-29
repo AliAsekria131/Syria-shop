@@ -1,5 +1,5 @@
 // utils/notifications.js
-import { createClient } from '../../lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 
 // جلب عدد الإشعارات غير المقروءة
 export const getUnreadNotificationsCount = async (userId) => {

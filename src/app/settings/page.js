@@ -1,12 +1,12 @@
 // src/app/settings/page.js
 "use client";
 
-import { createClient } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Edit3, LogOut, X, ChevronLeft } from "lucide-react";
-import AppLayout from "../components/AppLayout";
-import ProfileEditForm from "../components/ProfileEditForm";
+import AppLayout from "@/components/AppLayout";
+import ProfileEditForm from "@/components/ProfileEditForm";
 
 const supabase = createClient();
 

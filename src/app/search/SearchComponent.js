@@ -1,14 +1,14 @@
 // src/app/search/SearchComponent.js
 "use client";
 
-import { createClient } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Search, Filter, MapPin, Calendar } from "lucide-react";
-import AppLayout from "../components/AppLayout";
-import UserProfileMenu from "../components/UserProfileMenu";
-import { useUser } from "../hooks/useUser";
+import AppLayout from "@/components/AppLayout";
+import UserProfileMenu from "@/components/UserProfileMenu";
+import { useUser } from "@/hooks/useUser";
 
 const supabase = createClient();
 

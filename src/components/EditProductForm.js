@@ -1,22 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from 'next/image';
-import {
-  validateProduct,
-  cleanText,
-  parsePrice,
-} from "../../utils/validation";
 
+// قائمة المحافظات السورية
 const SYRIAN_GOVERNORATES = [
   "دمشق", "ريف دمشق", "حلب", "حمص", "حماة", "إدلب",
   "اللاذقية", "طرطوس", "درعا", "السويداء", "القنيطرة",
   "دير الزور", "الرقة", "الحسكة",
 ];
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
 export default function EditProductForm({ product, onClose, onProductUpdated, supabase }) {
+  // حالة بيانات النموذج
   const [formData, setFormData] = useState({
     title: product?.title || "",
     price: product?.price || "",
@@ -25,10 +19,16 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
     location: product?.location || "",
   });
   
+  // حالة الصورة المختارة
   const [imageFile, setImageFile] = useState(null);
+  
+  // حالة التحميل
   const [loading, setLoading] = useState(false);
+  
+  // حالة الأخطاء
   const [errors, setErrors] = useState([]);
 
+  // منع التمرير عند فتح النموذج
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -36,51 +36,39 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
     };
   }, []);
 
+  // التحقق من وجود المنتج
   if (!product) {
     return <div className="text-gray-900 dark:text-white">خطأ في تحميل بيانات المنتج</div>;
   }
 
+  // تحديث حقل في النموذج
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // إخفاء الأخطاء عند التعديل
     if (errors.length > 0) setErrors([]);
   };
 
+  // عرض رسائل الخطأ لمدة 5 ثوان
   const showErrors = (errorList) => {
     setErrors(errorList);
     setTimeout(() => setErrors([]), 5000);
   };
 
-  const validateImageFile = (file) => {
-    if (!file) return null;
-
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return "نوع الملف غير مدعوم. استخدم JPEG, PNG, WEBP أو AVIF";
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      return "حجم الصورة كبير جداً. الحد الأقصى 5MB";
-    }
-
-    return null;
-  };
-
+  // رفع الصورة إلى Supabase Storage
   const uploadImage = async (file) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    // إنشاء اسم فريد للملف
+    const fileName = product.image_urls.toString().split("product-images/").pop();
+    
     const filePath = `${fileName}`;
-
-    const { data, error } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    // رفع الصورة
+    const { data, error } = await supabase.storage.from('product-images').upload(filePath, file, {upsert: true});
 
     if (error) {
       console.error("Storage error:", error);
       throw new Error("فشل في رفع الصورة: " + error.message);
     }
 
+    // الحصول على الرابط العام للصورة
     const { data: { publicUrl } } = supabase.storage
       .from('product-images')
       .getPublicUrl(filePath);
@@ -88,50 +76,48 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
     return publicUrl;
   };
 
+  // معالجة تحديث المنتج
   const handleUpdateProduct = async () => {
+
     try {
       setLoading(true);
       setErrors([]);
 
+      // التحقق من تسجيل الدخول
       const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
       if (authError || !user) {
         showErrors(["يجب تسجيل الدخول لتحديث المنتج"]);
         return;
       }
 
-      const cleanedData = {
-        title: cleanText(formData.title),
-        price: parsePrice(formData.price),
-        description: cleanText(formData.description),
-        category: cleanText(formData.category),
-        location: cleanText(formData.location),
+      // إعداد البيانات للتحديث
+      const updateData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        price: parseFloat(formData.price),
+        category: formData.category,
+        location: formData.location,
       };
 
-      const validation = validateProduct(cleanedData);
-      if (!validation.isValid) {
-        showErrors(validation.errors);
+      // التحقق من البيانات الأساسية
+      if (!updateData.title || !updateData.description || !updateData.price || !updateData.category || !updateData.location) {
+        showErrors(["جميع الحقول مطلوبة"]);
         return;
       }
 
-      const updateData = {
-        title: cleanedData.title,
-        description: cleanedData.description,
-        price: cleanedData.price,
-        category: cleanedData.category,
-        location: cleanedData.location,
-      };
-
+      // رفع الصورة الجديدة إذا تم اختيارها
       if (imageFile) {
-        const imageError = validateImageFile(imageFile);
-        if (imageError) {
-          showErrors([imageError]);
+        try {
+          const imageUrl = await uploadImage(imageFile);
+          updateData.image_urls = [imageUrl];
+        } catch (error) {
+          showErrors([error.message]);
           return;
         }
-        
-        const imageUrl = await uploadImage(imageFile);
-        updateData.image_urls = [imageUrl];
       }
 
+      // تحديث المنتج في قاعدة البيانات
       const { data: updatedProduct, error: dbError } = await supabase
         .from("ads")
         .update(updateData)
@@ -146,28 +132,22 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
         throw new Error("لم يتم العثور على المنتج أو ليس لديك صلاحية للتعديل");
       }
 
+      // إعلام المكون الأب بالتحديث
       onProductUpdated(updatedProduct);
 
     } catch (error) {
-      console.error("Error updating product:", error);
       showErrors([error.message || "حدث خطأ أثناء تحديث المنتج"]);
     } finally {
       setLoading(false);
     }
   };
 
+  // معالجة تغيير الصورة
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const error = validateImageFile(file);
-    if (error) {
-      showErrors([error]);
-      e.target.value = '';
-      return;
+    if (file) {
+      setImageFile(file);
     }
-
-    setImageFile(file);
   };
 
   return (
@@ -179,7 +159,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                   flex flex-col
                   animate-slide-up sm:animate-none">
         
-        {/* Header */}
+        {/* رأس النموذج */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">تعديل المنتج</h2>
           <button
@@ -194,11 +174,11 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
           </button>
         </div>
 
-        {/* Content */}
+        {/* محتوى النموذج */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 pb-6">
             
-            {/* Error Messages */}
+            {/* رسائل الخطأ */}
             {errors.length > 0 && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
                 {errors.map((error, index) => (
@@ -209,10 +189,10 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
               </div>
             )}
 
-            {/* Form */}
+            {/* النموذج */}
             <form onSubmit={(e) => { e.preventDefault(); handleUpdateProduct(); }} className="space-y-4">
               
-              {/* Product Name */}
+              {/* اسم المنتج */}
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   اسم المنتج *
@@ -228,7 +208,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                 />
               </div>
 
-              {/* Price */}
+              {/* السعر */}
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   السعر (بالليرة السورية) *
@@ -245,7 +225,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                 />
               </div>
 
-              {/* Description */}
+              {/* الوصف */}
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   وصف المنتج *
@@ -261,7 +241,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                 />
               </div>
 
-              {/* Category */}
+              {/* الفئة */}
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   فئة المنتج *
@@ -280,7 +260,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                 </select>
               </div>
 
-              {/* Location */}
+              {/* الموقع */}
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   الموقع *
@@ -301,13 +281,14 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                 </select>
               </div>
 
-              {/* Image Upload */}
+              {/* رفع الصورة */}
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-2">
                   تغيير صورة المنتج (اختياري)
                 </label>
                 
                 <div className="flex items-start gap-3 mb-3">
+                  {/* عرض الصورة الحالية */}
                   <Image
                     src={product.image_urls?.[0] || "/placeholder-image.jpg"}
                     alt="الصورة الحالية"
@@ -317,9 +298,10 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                     unoptimized={product.image_urls?.[0]?.startsWith('http')}
                   />
                   <div className="flex-1 min-w-0">
+                    {/* حقل اختيار الصورة - التحقق من النوع والحجم يتم من Supabase */}
                     <input
                       type="file"
-                      accept={ALLOWED_IMAGE_TYPES.join(',')}
+                      accept="image/*"
                       onChange={handleImageChange}
                       className="w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
                       disabled={loading}
@@ -329,9 +311,6 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
                         تم اختيار: {imageFile.name}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      الحد الأقصى: 5MB | الأنواع: JPEG, PNG, WEBP, AVIF
-                    </p>
                   </div>
                 </div>
               </div>
@@ -339,9 +318,10 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
           </div>
         </div>
 
-        {/* Footer */}
+        {/* أزرار الإجراءات */}
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 bg-white dark:bg-gray-900">
           <div className="flex gap-3">
+            {/* زر حفظ التعديلات */}
             <button
               onClick={handleUpdateProduct}
               disabled={loading}
@@ -357,6 +337,7 @@ export default function EditProductForm({ product, onClose, onProductUpdated, su
               )}
             </button>
 
+            {/* زر الإلغاء */}
             <button
               type="button"
               onClick={onClose}

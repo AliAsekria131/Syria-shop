@@ -1,5 +1,5 @@
 // utils/likes.js
-import { createClient } from '../../lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 
 // إضافة إعجاب
 export const addLike = async (userId, adId) => {

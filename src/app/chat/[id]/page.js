@@ -1,7 +1,7 @@
 // chat/[id]/page.js
 "use client";
 
-import { createClient } from '../../../../lib/supabase';
+import { createClient } from '@/lib/supabase';
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -9,7 +9,7 @@ import { Send, ArrowLeft, MoreVertical } from "lucide-react";
 
 import { markConversationAsRead } from '@/utils/messages';
 
-import AppLayout from "../../components/AppLayout";
+import AppLayout from "@/components/AppLayout";
 
 export default function ChatPage() {
   const supabase = createClient();

@@ -1,7 +1,7 @@
 // src/app/about/page.js
 "use client";
 
-import AppLayout from "../components/AppLayout";
+import AppLayout from "@/components/AppLayout";
 
 export default function AboutPage() {
   return (

@@ -1,11 +1,11 @@
 // src/app/components/AppLayout.js
 "use client";
 
-import { createClient } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
-import UserProfileMenu from "../components/UserProfileMenu";
+import UserProfileMenu from "@/components/UserProfileMenu";
 import {
   Home,
   Search,
@@ -39,50 +39,41 @@ export default function AppLayout({ children }) {
     else return false;
   }
 
-  useEffect(() => {
-    let mounted = true;
+  const checkAuth = async () => {
+    try {
+      const {
+        data: { user: authUser },
+        error,
+      } = await supabase.auth.getUser();
 
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { user: authUser },
-          error,
-        } = await supabase.auth.getUser();
-
-        if (!mounted) return;
-        if (error) {
-          console.error("Auth error:", error?.message);
-          return;
-        }
-
-        const { data: userProfile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", authUser.id)
-          .single();
-
-        if (!mounted) return;
-
-        if (profileError && process.env.NODE_ENV === "development") {
-          console.error("Profile fetch error:", profileError.message);
-        }
-
-        setUser(userProfile);
-        setIsLoading(false);
-      } catch (err) {
-        if (!mounted) return;
-        if (process.env.NODE_ENV === "development") {
-          console.error("Unexpected error:", err);
-        }
-        setAuthError("حدث خطأ في التحقق من الهوية");
-        setIsLoading(false);
+      if (error) {
+        console.error("Auth error:", error?.message);
+        return;
       }
-    };
 
+      const { data: userProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
+
+      if (profileError && process.env.NODE_ENV === "development") {
+        console.error("Profile fetch error:", profileError.message);
+      }
+
+      setUser(userProfile);
+      setIsLoading(false);
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Unexpected error:", err);
+      }
+      setAuthError("حدث خطأ في التحقق من الهوية");
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     checkAuth();
-    return () => {
-      mounted = false;
-    };
   }, [supabase]);
 
   useEffect(() => {

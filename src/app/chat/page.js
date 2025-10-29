@@ -1,13 +1,14 @@
 // chat/page.js
 "use client";
 
-import { createClient } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
+import AvatarWithFallback from "./AvatarWithFallback";
 
-import AppLayout from "../components/AppLayout";
+import AppLayout from "@/components/AppLayout";
 
 export default function ChatListPage() {
   const supabase = createClient();
@@ -119,6 +120,7 @@ export default function ChatListPage() {
     }
   };
 
+
   if (loading) {
     return (
       <AppLayout>
@@ -172,16 +174,11 @@ export default function ChatListPage() {
                 className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900/30 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <Image
-                    src={conv.otherUser?.avatar_url || "/avatar.svg"}
-                    alt={conv.otherUser?.full_name || "مستخدم"}
-                    width={48}
-                    height={48}
-                    // bg-gray-100 -> dark:bg-gray-800
-                    className="rounded-full object-cover bg-gray-100 dark:bg-gray-800"
-                    onError={(e) => {
-                      e.target.src = "/avatar.svg";
-                    }}
+                  <AvatarWithFallback
+                    user={conv.otherUser}
+                    width={36}
+                    height={36}
+                    className="rounded-full border-2 border-gray-200 dark:border-gray-700 object-cover w-9 h-9 hover:opacity-90 transition-opacity"
                   />
 
                   {/* النقطة الحمراء */}

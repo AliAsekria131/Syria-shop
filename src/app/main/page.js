@@ -1,13 +1,13 @@
 // src/app/main/page.js
 "use client";
 
-import { createClient } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Calendar } from "lucide-react";
-import AppLayout from "../components/AppLayout";
+import AppLayout from "@/components/AppLayout";
 import Image from "next/image";
-import {CategoryFilter} from "../components/CategoryFilter";
+import { CategoryFilter } from "@/components/CategoryFilter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,18 +62,19 @@ export default function MainPage() {
 
   const fetchUser = useCallback(async () => {
     try {
-      const {
-        data: { user: currentUser },
-        error: authError,
-      } = await supabase.auth.getUser();
-      if (authError) throw authError;
+      const { data: { currentUser }} = await supabase.auth.getUser();
+      
+      if (!user) {
+    return <div>Please login</div>;
+  }
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", currentUser.id)
         .single();
-      if (profileError) throw profileError;
+        
+      if (error) throw error;
 
       setUser(profile);
     } catch (err) {
@@ -86,9 +87,9 @@ export default function MainPage() {
     setError(null);
     try {
       const { data, error } = await supabase.rpc("get_all_ads");
+      
       if (error) throw error;
       setAds(data || []);
-      
     } catch (err) {
       console.error("❌ خطأ أثناء الجلب:", err);
       setError("فشل تحميل الإعلانات. حاول لاحقًا.");
@@ -185,7 +186,9 @@ export default function MainPage() {
         {loading ? (
           <div className="text-center py-20">
             <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">جاري تحميل المنتجات...</p>
+            <p className="text-gray-600 dark:text-gray-300">
+              جاري تحميل المنتجات...
+            </p>
           </div>
         ) : ads.length === 0 ? (
           <div className="text-center py-20">

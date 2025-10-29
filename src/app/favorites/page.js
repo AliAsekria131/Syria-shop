@@ -1,11 +1,11 @@
 "use client";
 
-import { createClient } from '../../../lib/supabase';
+import { createClient } from '@/lib/supabase';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, Calendar, Trash2, HeartOff } from "lucide-react";
-import { getUserLikedProducts, removeLike } from "../../utils/likes";
-import AppLayout from "../components/AppLayout";
+import { getUserLikedProducts, removeLike } from "@/utils/likes";
+import AppLayout from "@/components/AppLayout";
 import Image from 'next/image';
 
 export default function FavoritesPage() {
