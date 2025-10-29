@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { passwordSchema, updatePasswordSchema } from "@/utils/validation";
+import { updatePasswordSchema } from "@/utils/validation";
 
 export default function UpdatePasswordPage() {
   const router = useRouter();

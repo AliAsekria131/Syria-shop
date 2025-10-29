@@ -1,10 +1,9 @@
 // chat/page.js
 "use client";
 
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import AvatarWithFallback from "./AvatarWithFallback";
 

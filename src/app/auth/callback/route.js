@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/server'
 
 /**
  * معالجة Callback من Supabase Auth
@@ -29,7 +29,7 @@ export async function GET(request) {
 
   try {
     const cookieStore = await cookies()
-    const supabase = await createServerSupabaseClient(cookieStore)
+    const supabase = await createServerClient(cookieStore)
 
     // تبادل الـ code بـ session
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
